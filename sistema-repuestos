@@ -1,0 +1,2590 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestión Integral de Repuestos - Multiusuario</title>
+    <!-- Librerías -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Librerías para PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- Google API -->
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        /* --- ESTILOS GENERALES Y MEJORADOS --- */
+        :root {
+            --primary-color: #004a7c;
+            --secondary-color: #0056b3;
+            --accent-color: #17a2b8;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --border-color: #dee2e6;
+            --shadow: 0 4px 8px rgba(0,0,0,0.1);
+            --shadow-hover: 0 8px 16px rgba(0,0,0,0.15);
+            --invitado-bg: #f5f9ff;
+            --invitado-card-bg: #ffffff;
+            --invitado-header-bg: #e6f0ff;
+        }
+        body { 
+            font-family: 'Segoe UI', system-ui, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); 
+            color: var(--dark-color); 
+            min-height: 100vh;
+        }
+        .container, .invitado-container { 
+            max-width: 1800px; 
+            margin: auto; 
+            background-color: #fff; 
+            padding: 30px; 
+            border-radius: 12px; 
+            box-shadow: var(--shadow); 
+            border: 1px solid #eaeaea;
+        }
+        h1, h2 { 
+            color: var(--primary-color); 
+            border-bottom: 3px solid var(--accent-color); 
+            padding-bottom: 10px; 
+            margin-bottom: 25px;
+            letter-spacing: -0.5px;
+        }
+        .tabs, .invitado-tabs { 
+            display: flex; 
+            border-bottom: 2px solid var(--border-color); 
+            margin-bottom: 25px; 
+            background-color: var(--light-color);
+            border-radius: 8px 8px 0 0; 
+            padding: 5px;
+        }
+        .tab-button, .invitado-tab-button { 
+            background-color: var(--primary-color); 
+            border: none; 
+            padding: 12px 25px; 
+            cursor: pointer; 
+            font-size: 16px; 
+            font-weight: 600;
+            border-radius: 6px; 
+            margin-right: 5px; 
+            transition: all 0.3s ease;
+            color: white;
+        }
+        .tab-button:hover, .invitado-tab-button:hover { 
+            background-color: var(--secondary-color); 
+            transform: translateY(-2px);
+        }
+        .tab-button.active, .invitado-tab-button.active { 
+            background-color: var(--accent-color); 
+            color: white; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .tab-content, .invitado-tab-content { display: none; }
+        .tab-content.active, .invitado-tab-content.active { display: block; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: var(--dark-color); }
+        input[type="text"], input[type="number"], input[type="date"], input[type="url"], input[type="password"], select, textarea { 
+            width: 100%; 
+            padding: 12px; 
+            border: 1px solid var(--border-color); 
+            border-radius: 6px; 
+            box-sizing: border-box; 
+            font-size: 14px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 5px rgba(23, 162, 184, 0.5);
+            outline: none;
+        }
+        button { 
+            background-color: var(--secondary-color); 
+            color: white; 
+            padding: 12px 20px; 
+            border: none; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-size: 16px; 
+            font-weight: 600;
+            margin-right: 10px; 
+            transition: background-color 0.3s, transform 0.2s;
+            letter-spacing: 0.5px;
+        }
+        button:hover { 
+            background-color: var(--primary-color); 
+            transform: translateY(-2px);
+        }
+        button:disabled { background-color: #ccc; cursor: not-allowed; transform: none; }
+        button.delete-btn { background-color: var(--danger-color); }
+        button.delete-btn:hover { background-color: #c82333; }
+        button.edit-btn { background-color: var(--warning-color); color: black; }
+        button.edit-btn:hover { background-color: #e0a800; }
+        .export-btn, .invitado-export-btn { 
+            background-color: var(--success-color); 
+            font-size: 16px; 
+            padding: 12px 25px; 
+            margin-top: 20px; 
+        }
+        .export-btn:hover, .invitado-export-btn:hover { background-color: #218838; }
+        .small-btn { padding: 6px 12px; font-size: 13px; }
+        .excel-btn { background-color: #28a745; }
+        .excel-btn:hover { background-color: #218838; }
+        .pdf-btn { background-color: #dc3545; }
+        .pdf-btn:hover { background-color: #c82333; }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 20px; 
+            font-size: 14px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        th, td { 
+            border: 1px solid var(--border-color); 
+            padding: 12px; 
+            text-align: left; 
+        }
+        th { 
+            background-color: var(--light-color); 
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+        tbody tr:nth-child(even) { background-color: #f8f9fa; }
+        tbody tr:hover { background-color: #e9ecef; }
+        .actions { white-space: nowrap; }
+        /* --- ESTILOS MODAL DE IMAGEN (MEJORADO) --- */
+        .img-preview { 
+            max-width: 60px; 
+            max-height: 60px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            border: 2px solid var(--border-color);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .img-preview:hover {
+            transform: scale(1.1);
+            box-shadow: var(--shadow);
+        }
+        .modal { 
+            display: none; 
+            position: fixed; 
+            z-index: 10000; 
+            left: 0; 
+            top: 0; 
+            width: 100%; 
+            height: 100%; 
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.92); 
+            backdrop-filter: blur(5px);
+            animation: fadeIn 0.4s;
+        }
+        .modal-content { 
+            margin: auto; 
+            display: block; 
+            width: auto;
+            max-width: 95vw;
+            max-height: 90vh;
+            height: auto;
+            object-fit: contain;
+            margin-top: 50px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            background: white;
+            padding: 20px;
+            animation: zoomIn 0.4s;
+        }
+        @keyframes zoomIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .close { 
+            position: absolute; 
+            top: 25px; 
+            right: 45px; 
+            color: #f1f1f1; 
+            font-size: 50px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            transition: color 0.3s;
+        }
+        .close:hover { color: var(--danger-color); }
+        /* --- ESTILOS PARA EL LOGIN --- */
+        .login-container { 
+            max-width: 450px; 
+            margin: 100px auto; 
+            padding: 30px; 
+            border: none; 
+            border-radius: 12px; 
+            background-color: #fff; 
+            box-shadow: var(--shadow-hover);
+        }
+        .login-container h2 { text-align: center; margin-top: 0; color: var(--primary-color); border: none; }
+        /* --- ESTILOS PARA LA VISTA DE INVITADO (MEJORADOS) --- */
+        .invitado-container {
+            background-color: var(--invitado-bg);
+            border: 1px solid #d0e0ff;
+        }
+        .invitado-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 20px; 
+            padding: 15px 20px; 
+            background-color: var(--invitado-header-bg);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .invitado-header h1 {
+            margin: 0;
+            border: none;
+            color: var(--primary-color);
+        }
+        .invitado-search { 
+            display: flex; 
+            gap: 10px; 
+            margin-bottom: 20px; 
+            padding: 15px;
+            background-color: var(--invitado-card-bg);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .invitado-search input { flex: 1; }
+        .invitado-search button { background-color: var(--accent-color); }
+        .invitado-search button:hover { background-color: #138496; }
+        .invitado-table-container { 
+            overflow-x: auto; 
+            background-color: var(--invitado-card-bg);
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .invitado-table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 0; 
+            font-size: 14px; 
+        }
+        .invitado-table th, .invitado-table td { 
+            border: 1px solid var(--border-color); 
+            padding: 12px; 
+            text-align: left; 
+        }
+        .invitado-table th { 
+            background-color: #e1f5fe; 
+            color: var(--primary-color); 
+        }
+        .invitado-status-pending { color: var(--warning-color); font-weight: bold; }
+        .invitado-status-completed { color: var(--success-color); font-weight: bold; }
+        .invitado-status-delayed { color: var(--danger-color); font-weight: bold; }
+        .invitado-detail-card { 
+            background-color: var(--invitado-card-bg); 
+            border: 1px solid var(--border-color); 
+            border-radius: 8px; 
+            padding: 20px; 
+            margin-bottom: 20px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05); 
+        }
+        .invitado-detail-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 15px; 
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .invitado-detail-header h3 { 
+            margin: 0; 
+            color: var(--accent-color); 
+            border: none; 
+        }
+        .invitado-detail-info { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 15px; 
+            margin-bottom: 15px; 
+        }
+        .invitado-detail-info p { margin: 5px 0; }
+        .invitado-detail-repuestos { 
+            margin-top: 20px; 
+        }
+        .invitado-repuesto-item { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 12px; 
+            border-bottom: 1px solid var(--border-color);
+            background-color: #f9fbff;
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+        .invitado-repuesto-item:last-child { border-bottom: none; }
+        .invitado-repuesto-info { 
+            flex: 1; 
+            display: flex;
+            align-items: center;
+        }
+        .invitado-repuesto-image {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 6px;
+            margin-right: 15px;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .invitado-repuesto-image:hover {
+            transform: scale(1.05);
+        }
+        .invitado-repuesto-status { 
+            padding: 5px 10px; 
+            border-radius: 4px; 
+            font-size: 12px; 
+            font-weight: bold; 
+        }
+        .invitado-repuesto-status.pending { 
+            background-color: #fff3cd; 
+            color: #856404; 
+        }
+        .invitado-repuesto-status.completed { 
+            background-color: #d4edda; 
+            color: #155724; 
+        }
+        .invitado-repuesto-status.delayed { 
+            background-color: #f8d7da; 
+            color: #721c24; 
+        }
+        .invitado-summary { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+            gap: 15px; 
+            margin-top: 20px; 
+        }
+        .invitado-summary-card { 
+            background-color: var(--invitado-card-bg); 
+            padding: 20px; 
+            border-radius: 8px; 
+            text-align: center; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05); 
+            border: 1px solid #e0e8ff;
+        }
+        .invitado-summary-card h4 { 
+            margin: 0 0 10px 0; 
+            color: var(--primary-color); 
+        }
+        .invitado-summary-card p { 
+            margin: 0; 
+            font-size: 28px; 
+            font-weight: bold; 
+            color: var(--secondary-color); 
+        }
+        .invitado-logout-btn { 
+            background-color: var(--danger-color); 
+        }
+        .invitado-logout-btn:hover { 
+            background-color: #c82333; 
+        }
+        /* --- ESTILOS PARA FICHAS Y DASHBOARD --- */
+        .ficha-header { 
+            background-color: #eef; 
+            padding: 20px; 
+            border-radius: 8px; 
+            margin-bottom: 20px; 
+            display: flex; 
+            align-items: center; 
+            gap: 20px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05); 
+        }
+        .ficha-header img { 
+            max-width: 150px; 
+            max-height: 100px; 
+            border-radius: 6px; 
+            border: 1px solid var(--border-color); 
+        }
+        .ficha-header-info h3 { 
+            margin: 0 0 10px 0; 
+            color: var(--primary-color); 
+            border: none; 
+        }
+        .ficha-header-info p { 
+            margin: 5px 0; 
+        }
+        .ficha-header-info p { 
+            margin: 5px 0; 
+        }
+        .dashboard-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+            gap: 20px; 
+        }
+        .dashboard-card { 
+            background-color: #f9f9f9; 
+            border: 1px solid var(--border-color); 
+            border-radius: 8px; 
+            padding: 20px; 
+            text-align: center; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05); 
+        }
+        .dashboard-card h3 { 
+            margin-top: 0; 
+            color: var(--dark-color); 
+            border: none; 
+        }
+        .metric-card { 
+            font-size: 2.5em; 
+            font-weight: bold; 
+            color: var(--secondary-color); 
+        }
+        .dashboard-table-container { 
+            margin-top: 20px; 
+        }
+        .dashboard-table-container table { 
+            font-size: 12px; 
+        }
+        .bulk-import-section { 
+            border: 2px solid var(--success-color); 
+            padding: 20px; 
+            border-radius: 8px; 
+            margin-top: 30px; 
+            background-color: #f0fff4; 
+        }
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 6px;
+            color: white;
+            font-weight: 600;
+            z-index: 1000;
+            box-shadow: var(--shadow);
+            transform: translateX(120%);
+            transition: transform 0.3s ease-out;
+        }
+        .notification.show {
+            transform: translateX(0);
+        }
+        .notification.success {
+            background-color: var(--success-color);
+        }
+        .notification.error {
+            background-color: var(--danger-color);
+        }
+        .notification.warning {
+            background-color: var(--warning-color);
+            color: var(--dark-color);
+        }
+        .example-format {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 10px;
+            margin-top: 10px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .report-section {
+            background-color: #f0f8ff;
+            border: 2px solid var(--secondary-color);
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+        }
+        .report-section h3 {
+            color: var(--secondary-color);
+            margin-top: 0;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+        .report-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .ficha-report-section {
+            background-color: #f0f8ff;
+            border: 2px solid var(--secondary-color);
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+        }
+        .ficha-report-section h3 {
+            color: var(--secondary-color);
+            margin-top: 0;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+        /* Estilos para indicador de sincronización */
+        .sync-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transform: translateY(100px);
+            transition: transform 0.3s ease-out;
+            z-index: 1000;
+        }
+        .sync-indicator.show {
+            transform: translateY(0);
+        }
+        .sync-indicator.success {
+            background-color: var(--success-color);
+        }
+        .sync-indicator.error {
+            background-color: var(--danger-color);
+        }
+        .sync-spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        /* Estilos para modo Google Sheets */
+        .google-sheets-notice {
+            background-color: #e3f2fd;
+            border: 1px solid #bbdefb;
+            color: #0d47a1;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .google-sheets-notice i {
+            font-size: 20px;
+        }
+        /* Estilos para usuarios conectados */
+        .connected-users {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-size: 14px;
+            z-index: 1000;
+        }
+        .user-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        .user-online {
+            background-color: #4CAF50;
+        }
+        .user-away {
+            background-color: #FFC107;
+        }
+    </style>
+</head>
+<body>
+<!-- PANTALLA DE LOGIN -->
+<div id="loginScreen" class="login-container">
+    <h2>Inicio de Sesión</h2>
+    <div class="google-sheets-notice">
+        <i>📊</i>
+        <span>Modo Google Sheets activado. Los datos se sincronizarán con tu hoja de cálculo.</span>
+    </div>
+    <form id="loginForm">
+        <div class="form-group">
+            <label for="username">Usuario:</label>
+            <select id="username">
+                <option value="">-- Seleccione --</option>
+                <option value="admin">Administrador</option>
+                <option value="invitado">Invitado (Solo Lectura)</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="password">Contraseña:</label>
+            <input type="password" id="password" placeholder="Ingrese su contraseña">
+        </div>
+        <button type="submit">Ingresar</button>
+    </form>
+</div>
+
+<!-- APLICACIÓN PRINCIPAL DEL ADMINISTRADOR -->
+<div id="adminContainer" style="display: none;">
+<div class="container">
+    <h1>Sistema de Gestión Integral de Repuestos</h1>
+    <div class="tabs">
+        <button class="tab-button active" onclick="showTab('trabajos')">1. Gestión de Trabajos</button>
+        <button class="tab-button" onclick="showTab('ficha')">2. Ficha de Trabajo</button>
+        <button class="tab-button" onclick="showTab('dashboard')">3. Auditoría y KPIs</button>
+    </div>
+
+    <!-- Tab 1: Gestión de Trabajos -->
+    <div id="trabajos" class="tab-content active">
+        <h2>Crear Nuevo Trabajo (Individual)</h2>
+        <form id="formTrabajo">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div class="form-group"><label for="numCotizacion">N° Cotización:</label><input type="text" id="numCotizacion" required></div>
+                <div class="form-group"><label for="nombreCliente">Nombre del Cliente:</label><input type="text" id="nombreCliente" required></div>
+                <div class="form-group"><label for="placa">Placa:</label><input type="text" id="placa"></div>
+                <div class="form-group"><label for="modeloVehiculo">Modelo del Vehículo:</label>
+                    <select id="modeloVehiculo">
+                        <option value="">-- Seleccione --</option>
+                        <option value="ALSVIN">ALSVIN</option>
+                        <option value="CS55 PLUS">CS55 PLUS</option>
+                        <option value="CS35 PLUS">CS35 PLUS</option>
+                        <option value="CS35">CS35</option>
+                        <option value="CS55 NORMAL">CS55 NORMAL</option>
+                        <option value="CX70">CX70</option>
+                        <option value="OSHAN X7">OSHAN X7</option>
+                        <option value="UNI-T">UNI-T</option>
+                        <option value="UNI-K">UNI-K</option>
+                        <option value="HUNTER">HUNTER</option>
+                        <option value="Otro">Otro</option>
+                    </select>
+                </div>
+                <div class="form-group"><label for="imagenVehiculo">Imagen del Vehículo (URL):</label><input type="url" id="imagenVehiculo" placeholder="https://..."></div>
+            </div>
+            <button type="submit">Guardar Trabajo Vacío</button>
+        </form>
+
+        <div class="bulk-import-section">
+            <h2>Crear Trabajo con Repuestos Masivos</h2>
+            <p>Completa los datos del trabajo y pega la lista de repuestos a continuación.</p>
+            <div class="example-format">
+                <strong>Formato de ejemplo:</strong><br>
+                Código[TAB]Descripción[TAB]Cantidad<br>
+                PC201194-0102-A1	FRONT HOOD WELD ASSY WITH HINGE	1<br>
+                PCK201080-0505	FR COMBINATION LAMP RH	1
+            </div>
+            <form id="formTrabajoMasivo">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group"><label for="numCotizacionMasivo">N° Cotización:</label><input type="text" id="numCotizacionMasivo" required></div>
+                    <div class="form-group"><label for="nombreClienteMasivo">Nombre del Cliente:</label><input type="text" id="nombreClienteMasivo" required></div>
+                    <div class="form-group"><label for="placaMasivo">Placa:</label><input type="text" id="placaMasivo"></div>
+                    <div class="form-group"><label for="modeloVehiculoMasivo">Modelo del Vehículo:</label>
+                        <select id="modeloVehiculoMasivo">
+                            <option value="">-- Seleccione --</option>
+                            <option value="ALSVIN">ALSVIN</option>
+                            <option value="CS55 PLUS">CS55 PLUS</option>
+                            <option value="CS35 PLUS">CS35 PLUS</option>
+                            <option value="CS35">CS35</option>
+                            <option value="CS55 NORMAL">CS55 NORMAL</option>
+                            <option value="CX70">CX70</option>
+                            <option value="OSHAN X7">OSHAN X7</option>
+                            <option value="UNI-T">UNI-T</option>
+                            <option value="UNI-K">UNI-K</option>
+                            <option value="HUNTER">HUNTER</option>
+                            <option value="Otro">Otro</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="textoRepuestosMasivosTrabajo">Lista de Repuestos (Código[TAB]Descripción[TAB]Cantidad):</label>
+                    <textarea id="textoRepuestosMasivosTrabajo" rows="10" style="width:100%;" placeholder="Ejemplo:&#10;PC201194-0102-A1	FRONT HOOD WELD ASSY WITH HINGE	1&#10;PCK201080-0505	FR COMBINATION LAMP RH	1"></textarea>
+                </div>
+                <button type="submit">Crear Trabajo e Importar Repuestos</button>
+            </form>
+        </div>
+
+        <h2>Listado de Trabajos Activos</h2>
+        <table id="tablaTrabajos">
+            <thead><tr><th>N° Cotización</th><th>Fecha</th><th>Cliente</th><th>Placa</th><th>Vehículo</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- Tab 2: Ficha de Trabajo Completa -->
+    <div id="ficha" class="tab-content">
+        <h2>Ficha Detallada del Trabajo</h2>
+        <div class="form-group">
+            <label for="selectTrabajoFicha">Seleccionar Trabajo para Ver Detalle:</label>
+            <select id="selectTrabajoFicha"><option value="">-- Seleccione un trabajo --</option></select></select>
+        </div>
+        <div id="contenidoFicha"></div>
+    </div>
+
+    <!-- Tab 3: Auditoría y KPIs -->
+    <div id="dashboard" class="tab-content">
+        <h2>Auditoría y KPIs del Sistema</h2>
+        <div class="dashboard-grid">
+            <div class="dashboard-card"><h3>Efectividad General de Repuestos</h3><div class="metric-card" id="metricEfectividad">0%</div></div></div>
+            <div class="dashboard-card"><h3>Total de Trabajos Activos</h3><div class="metric-card" id="metricTrabajos">0</div></div>
+            <div class="dashboard-card"><h3>Total de Repuestos en Proceso</h3><div class="metric-card" id="metricRepuestos">0</div></div>
+            <div class="dashboard-card"><h3>Tiempo Promedio de Espera (días)</h3><div class="metric-card" id="metricTiempoPromedio">0</div></div>
+        </div>
+        <div class="dashboard-grid" style="margin-top: 20px;">
+            <div class="dashboard-card"><canvas id="chartEstados"></canvas></div>
+            <div class="dashboard-card"><canvas id="chartModelos"></canvas></div>
+            <div class="dashboard-card"><canvas id="chartClientes"></canvas></div>
+        </div>
+        <div class="dashboard-table-container">
+            <h3>Historial de Cambios de Estado (Auditoría)</h3>
+            <div class="form-group">
+                <label for="filtroHistorial">Filtrar por Código de Repuesto:</label>
+                <input type="text" id="filtroHistorial" oninput="renderizarHistorial()">
+            </div>
+            <table id="tablaHistorial">
+                <thead><tr><th>Fecha y Hora</th><th>Cliente</th><th>Repuesto</th><th>Cotización</th><th>Estado Anterior</th><th>Estado Nuevo</th><th>Cambiado por</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        
+        <!-- Sección de reportes por cliente -->
+        <div class="report-section">
+            <h3>Generar Reportes por Cliente</h3>
+            <div class="form-group">
+                <label for="selectClienteReporte">Seleccionar Cliente:</label>
+                <select id="selectClienteReporte">
+                    <option value="">-- Seleccione un cliente --</option>
+                </select>
+            </div>
+            <div class="report-buttons">
+                <button class="export-btn excel-btn" onclick="generarReporteIndividualExcel()">📊 Generar Reporte Excel</button>
+                <button class="export-btn pdf-btn" onclick="generarReporteIndividualPDF()">📄 Generar Reporte PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <button class="export-btn" onclick="exportarAExcel()">📊 Exportar Todo a Excel</button>
+    <button onclick="cerrarSesion()" style="background-color: #dc3545; margin-left: 10px;">Cerrar Sesión</button>
+</div>
+</div>
+
+<!-- APLICACIÓN PRINCIPAL DEL INVITADO -->
+<div id="invitadoContainer" style="display: none;">
+<div class="invitado-container">
+    <div class="invitado-header">
+        <h1>Portal de Consulta de Repuestos</h1>
+        <button class="invitado-logout-btn" onclick="cerrarSesion()">Cerrar Sesión</button>
+    </div>
+    <div class="invitado-tabs">
+        <button class="invitado-tab-button active" onclick="showInvitadoTab('consulta')">Consulta de Trabajos</button>
+        <button class="invitado-tab-button" onclick="showInvitadoTab('detalles')">Detalles de Trabajo</button>
+        <button class="invitado-tab-button" onclick="showInvitadoTab('reportes')">Reportes</button>
+    </div>
+
+    <!-- Tab 1: Consulta de Trabajos -->
+    <div id="consulta" class="invitado-tab-content active">
+        <h2>Consulta de Trabajos Activos</h2>
+        <div class="invitado-search">
+            <input type="text" id="busquedaInvitado" placeholder="Buscar por número de cotización, cliente o placa...">
+            <button onclick="buscarTrabajosInvitado()">Buscar</button>
+            <button onclick="limpiarBusquedaInvitado()">Limpiar</button>
+        </div>
+        <div class="invitado-table-container">
+            <table class="invitado-table" id="tablaTrabajosInvitado">
+                <thead>
+                    <tr>
+                        <th>N° Cotización</th>
+                        <th>Fecha</th>
+                        <th>Cliente</th>
+                        <th>Placa</th>
+                        <th>Vehículo</th>
+                        <th>Estado</th>
+                        <th>Progreso de Repuestos</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Tab 2: Detalles de Trabajo -->
+    <div id="detalles" class="invitado-tab-content">
+        <h2>Detalles del Trabajo</h2>
+        <div class="form-group">
+            <label for="selectTrabajoInvitado">Seleccionar Trabajo para Ver Detalle:</label>
+            <select id="selectTrabajoInvitado"><option value="">-- Seleccione un trabajo --</option></select></select>
+        </div>
+        <div id="contenidoTrabajoInvitado"></div>
+    </div>
+
+    <!-- Tab 3: Reportes -->
+    <div id="reportes" class="invitado-tab-content">
+        <h2>Reportes de Estado</h2>
+        <div class="invitado-summary">
+            <div class="invitado-summary-card">
+                <h4>Total de Trabajos Activos</h4>
+                <p id="invitadoTotalTrabajos">0</p>
+            </div>
+            <div class="invitado-summary-card">
+                <h4>Repuestos Pendientes</h4>
+                <p id="invitadoRepuestosPendientes">0</p>
+            </div>
+            <div class="invitado-summary-card">
+                <h4>Repuestos Recibidos</h4>
+                <p id="invitadoRepuestosRecibidos">0</p>
+            </div>
+            <div class="invitado-summary-card">
+                <h4>Trabajos Completados</h4>
+                <p id="invitadoTrabajosCompletados">0</p>
+            </div>
+        </div>
+        <div style="margin-top: 30px;">
+            <h3>Gráficos de Estado</h3>
+            <div class="dashboard-grid">
+                <div class="dashboard-card"><canvas id="invitadoChartEstados"></canvas></div>
+                <div class="dashboard-card"><canvas id="invitadoChartProgreso"></canvas></div>
+            </div>
+        </div>
+        
+        <!-- Sección de reportes por cliente para invitados -->
+        <div class="report-section">
+            <h3>Generar Reportes por Cliente</h3>
+            <div class="form-group">
+                <label for="selectClienteReporteInvitado">Seleccionar Cliente:</label>
+                <select id="selectClienteReporteInvitado">
+                    <option value="">-- Seleccione un cliente --</option>
+                </select>
+            </div>
+            <div class="report-buttons">
+                <button class="invitado-export-btn excel-btn" onclick="generarReporteInvitadoExcel()">📊 Generar Reporte Excel</button>
+                <button class="invitado-export-btn pdf-btn" onclick="generarReporteInvitadoPDF()">📄 Generar Reporte PDF</button>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+<!-- Contenedor oculto para generar el PDF -->
+<div id="pdfContent"></div>
+
+<!-- Modal para ver imágenes (mejorado) -->
+<div id="imageModal" class="modal">
+    <span class="close" onclick="cerrarModalImagen()">&times;</span>
+    <img class="modal-content" id="modalImage">
+    </div>
+</div>
+
+<!-- Notificación -->
+<div id="notification" class="notification"></div>
+
+<!-- Indicador de sincronización -->
+<div id="syncIndicator" class="sync-indicator">
+    <div class="sync-spinner"></div>
+    <span id="syncText">Sincronizando...</span>
+</div>
+
+<!-- Indicador de usuarios conectados -->
+<div id="connectedUsers" class="connected-users" style="display: none;">
+    <span class="user-indicator user-online"></span>
+    <span id="userCount">0 usuarios conectados</span>
+</div>
+</div>
+
+<script>
+    // --- CONFIGURACIÓN Y VARIABLES GLOBALES ---
+    const { jsPDF } = window.jspdf;
+    const ESTADOS_REPUESTO = ['Solicitado a CEDIS', 'En Bodega Costa Verde', 'Despachado a Taller', 'Pedido Especial', 'En Revision por el CEDIS', 'Facturado'];
+    let trabajos = [];
+    let repuestos = [];
+    let historialEstados = [];
+    let chartEstados, chartModelos, chartClientes;
+    let invitadoChartEstados, invitadoChartProgreso;
+    let idRepuestoEnEdicion = null;
+    let usuarioActual = null;
+    let connectedUsers = [];
+    
+    // Configuración de Google Sheets API
+    const API_KEY = 'AIzaSyCNP34eVXC-5XMs3-zKJ71bO7856NTBPYc'; // API key proporcionada
+    const SPREADSHEET_ID = '1udqJTS1E7Wl7j5q8h2FWPyElXEl2Aom59Hwns4oCGw0'; // ID de la hoja de cálculo
+    const DISCOVERY_DOCS = ['https://sheets.googleapis.com/$discovery/rest?version=v4'];
+    const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
+    
+    let tokenClient;
+    let gapiInited = false;
+    let gisInited = false;
+    let lastSyncTime = 0;
+    let syncInterval;
+    let userActivityInterval;
+    
+    // Modo de almacenamiento (local o google sheets)
+    const USE_LOCAL_STORAGE = false; // Cambiado a false para usar Google Sheets
+    
+    // --- INICIALIZACIÓN DE GOOGLE API ---
+    function gapiLoaded() {
+        if (!USE_LOCAL_STORAGE) {
+            gapi.load('client', initializeGapiClient);
+        } else {
+            gapiInited = true;
+            console.log('Modo local activado. Google API no se inicializará.');
+        }
+    }
+
+    async function initializeGapiClient() {
+        if (USE_LOCAL_STORAGE) return;
+        
+        await gapi.client.init({
+            apiKey: API_KEY,
+            discoveryDocs: DISCOVERY_DOCS,
+        });
+        gapiInited = true;
+        maybeEnableButtons();
+    }
+
+    function gisLoaded() {
+        if (USE_LOCAL_STORAGE) {
+            gisInited = true;
+            console.log('Modo local activado. Google Identity Services no se inicializará.');
+        } else {
+            tokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: '921169094128-g9i6hvrmo988nh10o3920urn3anbsh6k.apps.googleusercontent.com', // Client ID para OAuth 2.0
+                scope: SCOPES,
+                callback: '', // definido más tarde
+            });
+            gisInited = true;
+            maybeEnableButtons();
+        }
+    }
+
+    function maybeEnableButtons() {
+        if (gapiInited && gisInited) {
+            // Las API están listas para usar
+            console.log('Google APIs inicializadas correctamente');
+        }
+    }
+
+    // --- FUNCIONES DE GOOGLE SHEETS ---
+    async function authenticateGoogle() {
+        if (USE_LOCAL_STORAGE) return Promise.resolve();
+        
+        return new Promise((resolve, reject) => {
+            tokenClient.callback = async (resp) => {
+                if (resp.error !== undefined) {
+                    reject(resp);
+                } else {
+                    resolve();
+                }
+            };
+            if (gapi.client.getToken() === null) {
+                tokenClient.requestAccessToken({ prompt: 'consent' });
+            } else {
+                tokenClient.requestAccessToken({ prompt: '' });
+            }
+        });
+    }
+
+    async function saveDataToGoogleSheets() {
+        if (USE_LOCAL_STORAGE) {
+            return Promise.resolve();
+        }
+        
+        try {
+            showSyncIndicator('Sincronizando con Google Sheets...', 'syncing');
+            
+            // Preparar los datos para guardar
+            const data = {
+                trabajos: trabajos,
+                repuestos: repuestos,
+                historialEstados: historialEstados,
+                lastModified: new Date().toISOString(),
+                connectedUsers: connectedUsers
+            };
+            
+            // Convertir los datos a formato de hoja de cálculo
+            const jsonData = JSON.stringify(data);
+            
+            // Actualizar la hoja de cálculo
+            const response = await gapi.client.sheets.spreadsheets.values.update({
+                spreadsheetId: SPREADSHEET_ID,
+                range: 'Datos!A1',
+                valueInputOption: 'RAW',
+                resource: {
+                    values: [[jsonData]]
+                }
+            });
+            
+            lastSyncTime = Date.now();
+            showSyncIndicator('Datos sincronizados correctamente', 'success');
+            setTimeout(hideSyncIndicator, 3000);
+            
+            return response;
+        } catch (error) {
+            console.error('Error al guardar datos en Google Sheets:', error);
+            showSyncIndicator('Error al sincronizar datos', 'error');
+            setTimeout(hideSyncIndicator, 5000);
+            throw error;
+        }
+    }
+
+    async function loadDataFromGoogleSheets() {
+        if (USE_LOCAL_STORAGE) {
+            return Promise.resolve(false);
+        }
+        
+        try {
+            showSyncIndicator('Cargando datos desde Google Sheets...', 'syncing');
+            
+            // Obtener los datos de la hoja de cálculo
+            const response = await gapi.client.sheets.spreadsheets.values.get({
+                spreadsheetId: SPREADSHEET_ID,
+                range: 'Datos!A1'
+            });
+            
+            if (response.result.values && response.result.values.length > 0) {
+                const jsonData = response.result.values[0][0];
+                const data = JSON.parse(jsonData);
+                
+                // Actualizar los datos locales
+                if (data.trabajos) trabajos = data.trabajos;
+                if (data.repuestos) repuestos = data.repuestos;
+                if (data.historialEstados) historialEstados = data.historialEstados;
+                if (data.connectedUsers) connectedUsers = data.connectedUsers;
+                
+                lastSyncTime = Date.now();
+                showSyncIndicator('Datos cargados correctamente', 'success');
+                setTimeout(hideSyncIndicator, 3000);
+                
+                return true;
+            } else {
+                console.log('No se encontraron datos en la hoja de cálculo');
+                hideSyncIndicator();
+                return false;
+            }
+        } catch (error) {
+            console.error('Error al cargar datos desde Google Sheets:', error);
+            showSyncIndicator('Error al cargar datos', 'error');
+            setTimeout(hideSyncIndicator, 5000);
+            return false;
+        }
+    }
+
+    function showSyncIndicator(text, status = 'syncing') {
+        const indicator = document.getElementById('syncIndicator');
+        const syncText = document.getElementById('syncText');
+        
+        syncText.textContent = text;
+        indicator.className = 'sync-indicator show ' + status;
+    }
+
+    function hideSyncIndicator() {
+        const indicator = document.getElementById('syncIndicator');
+        indicator.className = 'sync-indicator';
+    }
+
+    // --- FUNCIONES DE USUARIOS CONECTADOS ---
+    function registerUserActivity() {
+        if (!usuarioActual) return;
+        
+        const userId = usuarioActual.nombre + '_' + Date.now();
+        const userIndex = connectedUsers.findIndex(u => u.nombre === usuarioActual.nombre);
+        
+        if (userIndex === -1) {
+            connectedUsers.push({
+                id: userId,
+                nombre: usuarioActual.nombre,
+                rol: usuarioActual.rol,
+                lastActivity: new Date().toISOString()
+            });
+        } else {
+            connectedUsers[userIndex].lastActivity = new Date().toISOString();
+        }
+        
+        updateConnectedUsersDisplay();
+    }
+
+    function updateConnectedUsersDisplay() {
+        const now = new Date();
+        const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
+        
+        // Filtrar usuarios activos (con actividad en los últimos 5 minutos)
+        const activeUsers = connectedUsers.filter(u => 
+            new Date(u.lastActivity) > fiveMinutesAgo
+        );
+        
+        const userCountElement = document.getElementById('userCount');
+        const connectedUsersElement = document.getElementById('connectedUsers');
+        
+        if (activeUsers.length > 0) {
+            userCountElement.textContent = `${activeUsers.length} usuario(s) conectado(s)`;
+            connectedUsersElement.style.display = 'block';
+        } else {
+            connectedUsersElement.style.display = 'none';
+        }
+    }
+
+    // --- SISTEMA DE LOGIN ---
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        if (username === 'admin' && password === 'admin') {
+            usuarioActual = { rol: 'admin', nombre: 'Administrador' };
+            iniciarAppAdmin();
+        } else if (username === 'invitado' && password === 'invitado') {
+            usuarioActual = { rol: 'invitado', nombre: 'Invitado' };
+            iniciarAppInvitado();
+        } else {
+            mostrarNotificacion('Usuario o contraseña incorrectos.', 'error');
+        }
+    });
+
+    async function iniciarAppAdmin() {
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('adminContainer').style.display = 'block';
+        document.querySelector('#adminContainer h1').textContent += ` - Sesión de ${usuarioActual.nombre}`;
+        
+        // Cargar datos desde Google Sheets o localStorage
+        if (!USE_LOCAL_STORAGE) {
+            await loadDataFromGoogleSheets();
+        }
+        
+        // Cargar datos locales como respaldo
+        cargarDatosLocales();
+        
+        renderizarTrabajos();
+        renderizarDashboard();
+        actualizarSelectClientesReporte();
+        
+        // Registrar actividad del usuario
+        registerUserActivity();
+        
+        // Iniciar sincronización automática cada 5 minutos solo si no estamos en modo local
+        if (!USE_LOCAL_STORAGE) {
+            syncInterval = setInterval(async () => {
+                await loadDataFromGoogleSheets();
+                renderizarTrabajos();
+                renderizarDashboard();
+            }, 5 * 60 * 1000);
+            
+            // Actualizar actividad del usuario cada minuto
+            userActivityInterval = setInterval(() => {
+                registerUserActivity();
+                saveDataToGoogleSheets();
+            }, 60 * 1000);
+        }
+    }
+
+    async function iniciarAppInvitado() {
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('invitadoContainer').style.display = 'block';
+        document.querySelector('.invitado-container h1').textContent += ` - Sesión de ${usuarioActual.nombre}`;
+        
+        // Cargar datos desde Google Sheets o localStorage
+        if (!USE_LOCAL_STORAGE) {
+            await loadDataFromGoogleSheets();
+        }
+        
+        // Cargar datos locales como respaldo
+        cargarDatosLocales();
+        
+        renderizarTrabajosInvitado();
+        renderizarReportesInvitado();
+        actualizarSelectTrabajosInvitado();
+        actualizarSelectClientesReporteInvitado();
+        
+        // Registrar actividad del usuario
+        registerUserActivity();
+        
+        // Iniciar sincronización automática cada 5 minutos solo si no estamos en modo local
+        if (!USE_LOCAL_STORAGE) {
+            syncInterval = setInterval(async () => {
+                await loadDataFromGoogleSheets();
+                renderizarTrabajosInvitado();
+                renderizarReportesInvitado();
+            }, 5 * 60 * 1000);
+            
+            // Actualizar actividad del usuario cada minuto
+            userActivityInterval = setInterval(() => {
+                registerUserActivity();
+                saveDataToGoogleSheets();
+            }, 60 * 1000);
+        }
+    }
+
+    function cerrarSesion() {
+        if (confirm('¿Está seguro de que desea cerrar sesión?')) {
+            // Detener la sincronización automática
+            if (syncInterval) clearInterval(syncInterval);
+            if (userActivityInterval) clearInterval(userActivityInterval);
+            
+            // Guardar datos locales antes de cerrar sesión
+            guardarDatosLocales();
+            
+            location.reload();
+        }
+    }
+
+    // --- FUNCIONES AUXILIARES ---
+    function formatearFecha(fechaISO) { 
+        if (!fechaISO) return ''; 
+        const fecha = new Date(fechaISO); 
+        const dia = String(fecha.getDate()).padStart(2, '0'); 
+        const mes = String(fecha.getMonth() + 1).padStart(2, '0'); 
+        const anio = String(fecha.getFullYear()).slice(-2); 
+        return `${dia}/${mes}/${anio}`; 
+    }
+
+    function formatearFechaHora(fechaISO) { 
+        if (!fechaISO) return ''; 
+        const fecha = new Date(fechaISO); 
+        return fecha.toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' }); 
+    }
+
+    // --- FUNCIONES DE NOTIFICACIÓN ---
+    function mostrarNotificacion(mensaje, tipo = 'success') {
+        const notification = document.getElementById('notification');
+        notification.textContent = mensaje;
+        notification.className = `notification ${tipo}`;
+        notification.classList.add('show');
+        
+        setTimeout(() => {
+            notification.classList.remove('show');
+        }, 3000);
+    }
+
+    // --- FUNCIONES DE ALMACENAMIENTO LOCAL ---
+    function cargarDatosLocales() {
+        try {
+            const trabajosData = localStorage.getItem('trabajos') ? JSON.parse(localStorage.getItem('trabajos')) : [];
+            const repuestosData = localStorage.getItem('repuestos') ? JSON.parse(localStorage.getItem('repuestos')) : [];
+            const historialData = localStorage.getItem('historialEstados') ? JSON.parse(localStorage.getItem('historialEstados')) : [];
+            
+            // Solo usar datos locales si no hay datos en la nube
+            if (trabajos.length === 0) trabajos = trabajosData;
+            if (repuestos.length === 0) repuestos = repuestosData;
+            if (historialEstados.length === 0) historialEstados = historialData;
+        } catch (error) {
+            console.error("Error al cargar datos locales:", error);
+            mostrarNotificacion("No se pudieron cargar los datos. Verifica tu conexión.", 'error');
+        }
+    }
+
+    function guardarDatosLocales() {
+        localStorage.setItem('trabajos', JSON.stringify(trabajos));
+        localStorage.setItem('repuestos', JSON.stringify(repuestos));
+        localStorage.setItem('historialEstados', JSON.stringify(historialEstados));
+    }
+
+    // --- FUNCIONES DE SINCRONIZACIÓN ---
+    async function guardarDatos() {
+        // Guardar en localStorage como respaldo
+        guardarDatosLocales();
+        
+        // Intentar guardar en Google Sheets solo si no estamos en modo local
+        if (!USE_LOCAL_STORAGE) {
+            try {
+                await saveDataToGoogleSheets();
+                console.log('Datos guardados en Google Sheets');
+                mostrarNotificacion('Datos guardados en Google Sheets', 'success');
+            } catch (error) {
+                console.error('Error al sincronizar con Google Sheets:', error);
+                mostrarNotificacion('Error al sincronizar datos. Los cambios se guardarán localmente.', 'warning');
+            }
+        }
+    }
+
+    // --- FUNCIONES DEL ADMINISTRADOR ---
+    function showTab(tabName) {
+        const tabContents = document.querySelectorAll('.tab-content');
+        tabContents.forEach(tab => tab.classList.remove('active'));
+        const tabButtons = document.querySelectorAll('.tab-button');
+        tabButtons.forEach(button => button.classList.remove('active'));
+        document.getElementById(tabName).classList.add('active');
+        event.target.classList.add('active');
+        if (tabName === 'trabajos') {
+            renderizarTrabajos();
+        } else if (tabName === 'ficha') {
+            actualizarSelectTrabajoFicha();
+        } else if (tabName === 'dashboard') {
+            renderizarDashboard();
+        }
+    }
+
+    // --- FUNCIONES DEL INVITADO ---
+    function showInvitadoTab(tabName) {
+        const tabContents = document.querySelectorAll('.invitado-tab-content');
+        tabContents.forEach(tab => tab.classList.remove('active'));
+        const tabButtons = document.querySelectorAll('.invitado-tab-button');
+        tabButtons.forEach(button => button.classList.remove('active'));
+        document.getElementById(tabName).classList.add('active');
+        event.target.classList.add('active');
+        if (tabName === 'consulta') {
+            renderizarTrabajosInvitado();
+        } else if (tabName === 'reportes') {
+            renderizarReportesInvitado();
+        }
+    }
+
+    // --- FUNCIONES DE RENDERIZADO ---
+    function renderizarTrabajos() {
+        const tbody = document.querySelector('#tablaTrabajos tbody');
+        tbody.innerHTML = '';
+        
+        trabajos.forEach(trabajo => {
+            const row = document.createElement('tr');
+            
+            // Determinar clase de estado
+            let estadoClass = '';
+            if (trabajo.estado === 'Completado') estadoClass = 'invitado-status-completed';
+            else if (trabajo.estado === 'En Proceso') estadoClass = 'invitado-status-pending';
+            else estadoClass = 'invitado-status-delayed';
+            
+            row.innerHTML = `
+                <td>${trabajo.numCotizacion}</td>
+                <td>${formatearFecha(trabajo.fechaIngreso)}</td>
+                <td>${trabajo.nombreCliente}</td>
+                <td>${trabajo.placa}</td>
+                <td>${trabajo.modeloVehiculo}</td>
+                <td class="${estadoClass}">${trabajo.estado}</td>
+                <td class="actions">
+                    <button class="small-btn edit-btn" onclick="editarTrabajo('${trabajo.id}')">Editar</button>
+                    <button class="small-btn delete-btn" onclick="eliminarTrabajo('${trabajo.id}')">Eliminar</button>
+                    <button class="small-btn" onclick="verFichaTrabajo('${trabajo.id}')">Ver Ficha</button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    function renderizarTrabajosInvitado() {
+        const tbody = document.querySelector('#tablaTrabajosInvitado tbody');
+        tbody.innerHTML = '';
+        
+        trabajos.forEach(trabajo => {
+            const repuestosTrabajo = repuestos.filter(r => r.idTrabajo === trabajo.id);
+            const totalRepuestos = repuestosTrabajo.length;
+            const repuestosRecibidos = repuestosTrabajo.filter(r => r.cantidadRecibida > 0).length;
+            const progreso = totalRepuestos > 0 ? Math.round((repuestosRecibidos / totalRepuestos) * 100) : 0;
+            
+            // Determinar clase de estado
+            let estadoClass = '';
+            if (trabajo.estado === 'Completado') estadoClass = 'invitado-status-completed';
+            else if (trabajo.estado === 'En Proceso') estadoClass = 'invitado-status-pending';
+            else estadoClass = 'invitado-status-delayed';
+            
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${trabajo.numCotizacion}</td>
+                <td>${formatearFecha(trabajo.fechaIngreso)}</td>
+                <td>${trabajo.nombreCliente}</td>
+                <td>${trabajo.placa}</td>
+                <td>${trabajo.modeloVehiculo}</td>
+                <td class="${estadoClass}">${trabajo.estado}</td>
+                <td>
+                    <div style="background-color: #e0e0e0; border-radius: 4px; height: 20px; position: relative;">
+                        <div style="background-color: #4caf50; height: 100%; width: ${progreso}%; border-radius: 4px;"></div>
+                        <span style="position: absolute; top: 0; left: 0; width: 100%; text-align: center; line-height: 20px; color: #333; font-size: 12px;">${progreso}%</span>
+                    </div>
+                </td>
+                <td class="actions">
+                    <button class="small-btn" onclick="verDetallesTrabajoInvitado('${trabajo.id}')">Ver Detalles</button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    function renderizarDashboard() {
+        // Calcular métricas
+        const totalTrabajos = trabajos.length;
+        const trabajosCompletados = trabajos.filter(t => t.estado === 'Completado').length;
+        const efectividad = totalTrabajos > 0 ? Math.round((trabajosCompletados / totalTrabajos) * 100) : 0;
+        
+        const totalRepuestos = repuestos.length;
+        const repuestosRecibidos = repuestos.filter(r => r.cantidadRecibida > 0).length;
+        
+        // Calcular tiempo promedio de espera
+        let tiempoPromedio = 0;
+        if (trabajos.length > 0) {
+            const trabajosConFecha = trabajos.filter(t => t.fechaIngreso && t.fechaCompletado);
+            if (trabajosConFecha.length > 0) {
+                const totalDias = trabajosConFecha.reduce((sum, trabajo) => {
+                    const ingreso = new Date(trabajo.fechaIngreso);
+                    const completado = new Date(trabajo.fechaCompletado);
+                    return sum + Math.floor((completado - ingreso) / (1000 * 60 * 60 * 24));
+                }, 0);
+                tiempoPromedio = Math.round(totalDias / trabajosConFecha.length);
+            }
+        }
+        
+        // Actualizar métricas en el DOM
+        document.getElementById('metricEfectividad').textContent = `${efectividad}%`;
+        document.getElementById('metricTrabajos').textContent = totalTrabajos;
+        document.getElementById('metricRepuestos').textContent = totalRepuestos;
+        document.getElementById('metricTiempoPromedio').textContent = tiempoPromedio;
+        
+        // Renderizar gráficos
+        renderizarChartEstados();
+        renderizarChartModelos();
+        renderizarChartClientes();
+        
+        // Renderizar historial
+        renderizarHistorial();
+    }
+
+    function renderizarChartEstados() {
+        const ctx = document.getElementById('chartEstados').getContext('2d');
+        const estadosCount = {
+            'Pendiente': trabajos.filter(t => t.estado === 'Pendiente').length,
+            'En Proceso': trabajos.filter(t => t.estado === 'En Proceso').length,
+            'Completado': trabajos.filter(t => t.estado === 'Completado').length
+        };
+        
+        if (chartEstados) chartEstados.destroy();
+        chartEstados = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(estadosCount),
+                datasets: [{
+                    data: Object.values(estadosCount),
+                    backgroundColor: ['#FF9800', '#2196F3', '#4CAF50']
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Trabajos por Estado'
+                    }
+                }
+            }
+        });
+    }
+
+    function renderizarChartModelos() {
+        const ctx = document.getElementById('chartModelos').getContext('2d');
+        const modelosCount = {};
+        
+        trabajos.forEach(trabajo => {
+            if (!modelosCount[trabajo.modeloVehiculo]) {
+                modelosCount[trabajo.modeloVehiculo] = 0;
+            }
+            modelosCount[trabajo.modeloVehiculo]++;
+        });
+        
+        if (chartModelos) chartModelos.destroy();
+        chartModelos = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(modelosCount),
+                datasets: [{
+                    label: 'Trabajos por Modelo',
+                    data: Object.values(modelosCount),
+                    backgroundColor: '#17a2b8'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Trabajos por Modelo de Vehículo'
+                    }
+                }
+            }
+        });
+    }
+
+    function renderizarChartClientes() {
+        const ctx = document.getElementById('chartClientes').getContext('2d');
+        const clientesCount = {};
+        
+        trabajos.forEach(trabajo => {
+            if (!clientesCount[trabajo.nombreCliente]) {
+                clientesCount[trabajo.nombreCliente] = 0;
+            }
+            clientesCount[trabajo.nombreCliente]++;
+        });
+        
+        // Ordenar clientes por cantidad de trabajos y tomar los 10 principales
+        const sortedClientes = Object.entries(clientesCount)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 10);
+        
+        if (chartClientes) chartClientes.destroy();
+        chartClientes = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: sortedClientes.map(c => c[0]),
+                datasets: [{
+                    label: 'Trabajos por Cliente',
+                    data: sortedClientes.map(c => c[1]),
+                    backgroundColor: '#28a745'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Top 10 Clientes por Trabajos'
+                    }
+                }
+            }
+        });
+    }
+
+    function renderizarHistorial() {
+        const tbody = document.querySelector('#tablaHistorial tbody');
+        tbody.innerHTML = '';
+        
+        const filtro = document.getElementById('filtroHistorial').value.toLowerCase();
+        const historialFiltrado = historialEstados.filter(h => 
+            h.codigoRepuesto.toLowerCase().includes(filtro)
+        );
+        
+        // Ordenar por fecha (más reciente primero)
+        historialFiltrado.sort((a, b) => new Date(b.fechaCambio) - new Date(a.fechaCambio));
+        
+        historialFiltrado.forEach(historial => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${formatearFechaHora(historial.fechaCambio)}</td>
+                <td>${historial.nombreCliente || '-'}</td>
+                <td>${historial.codigoRepuesto}</td>
+                <td>${historial.numCotizacion}</td>
+                <td>${historial.estadoAnterior || '-'}</td>
+                <td>${historial.estadoNuevo}</td>
+                <td>${historial.cambiadoPor}</td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    function renderizarReportesInvitado() {
+        const totalTrabajos = trabajos.length;
+        const totalRepuestos = repuestos.length;
+        const repuestosRecibidos = repuestos.filter(r => r.cantidadRecibida > 0).length;
+        const trabajosCompletados = trabajos.filter(t => t.estado === 'Completado').length;
+        
+        document.getElementById('invitadoTotalTrabajos').textContent = totalTrabajos;
+        document.getElementById('invitadoRepuestosPendientes').textContent = totalRepuestos - repuestosRecibidos;
+        document.getElementById('invitadoRepuestosRecibidos').textContent = repuestosRecibidos;
+        document.getElementById('invitadoTrabajosCompletados').textContent = trabajosCompletados;
+        
+        renderizarInvitadoChartEstados();
+        renderizarInvitadoChartProgreso();
+    }
+
+    function renderizarInvitadoChartEstados() {
+        const ctx = document.getElementById('invitadoChartEstados').getContext('2d');
+        const estadosCount = {
+            'Pendientes': trabajos.filter(t => t.estado === 'Pendiente').length,
+            'En Proceso': trabajos.filter(t => t.estado === 'En Proceso').length,
+            'Completados': trabajos.filter(t => t.estado === 'Completado').length
+        };
+        
+        if (invitadoChartEstados) invitadoChartEstados.destroy();
+        invitadoChartEstados = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(estadosCount),
+                datasets: [{
+                    data: Object.values(estadosCount),
+                    backgroundColor: ['#FF9800', '#2196F3', '#4CAF50']
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Trabajos por Estado'
+                    }
+                }
+            }
+        });
+    }
+
+    function renderizarInvitadoChartProgreso() {
+        const ctx = document.getElementById('invitadoChartProgreso').getContext('2d');
+        const estadosCount = {};
+        
+        ESTADOS_REPUESTO.forEach(estado => {
+            estadosCount[estado] = repuestos.filter(r => r.estado === estado).length;
+        });
+        
+        if (invitadoChartProgreso) invitadoChartProgreso.destroy();
+        invitadoChartProgreso = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(estadosCount),
+                datasets: [{
+                    label: 'Repuestos por Estado',
+                    data: Object.values(estadosCount),
+                    backgroundColor: '#17a2b8'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Repuestos por Estado'
+                    }
+                }
+            }
+        });
+    }
+
+    // --- FUNCIONES DE ACTUALIZACIÓN DE SELECTS ---
+    function actualizarSelectTrabajoFicha() {
+        const select = document.getElementById('selectTrabajoFicha');
+        select.innerHTML = '<option value="">-- Seleccione un trabajo --</option>';
+        
+        trabajos.forEach(trabajo => {
+            const option = document.createElement('option');
+            option.value = trabajo.id;
+            option.textContent = `${trabajo.numCotizacion} - ${trabajo.nombreCliente}`;
+            select.appendChild(option);
+        });
+        
+        select.onchange = function() {
+            if (this.value) {
+                renderizarFichaTrabajo(this.value);
+            } else {
+                document.getElementById('contenidoFicha').innerHTML = '';
+            }
+        };
+    }
+
+    function actualizarSelectTrabajosInvitado() {
+        const select = document.getElementById('selectTrabajoInvitado');
+        select.innerHTML = '<option value="">-- Seleccione un trabajo --</option>';
+        
+        trabajos.forEach(trabajo => {
+            const option = document.createElement('option');
+            option.value = trabajo.id;
+            option.textContent = `${trabajo.numCotizacion} - ${trabajo.nombreCliente}`;
+            select.appendChild(option);
+        });
+        
+        select.onchange = function() {
+            if (this.value) {
+                renderizarDetallesTrabajoInvitado(this.value);
+            } else {
+                document.getElementById('contenidoTrabajoInvitado').innerHTML = '';
+            }
+        };
+    }
+
+    function actualizarSelectClientesReporte() {
+        const select = document.getElementById('selectClienteReporte');
+        select.innerHTML = '<option value="">-- Seleccione un cliente --</option>';
+        
+        // Obtener lista única de clientes
+        const clientesUnicos = [...new Set(trabajos.map(t => t.nombreCliente))];
+        
+        clientesUnicos.forEach(cliente => {
+            const option = document.createElement('option');
+            option.value = cliente;
+            option.textContent = cliente;
+            select.appendChild(option);
+        });
+    }
+
+    function actualizarSelectClientesReporteInvitado() {
+        const select = document.getElementById('selectClienteReporteInvitado');
+        select.innerHTML = '<option value="">-- Seleccione un cliente --</option>';
+        
+        // Obtener lista única de clientes
+        const clientesUnicos = [...new Set(trabajos.map(t => t.nombreCliente))];
+        
+        clientesUnicos.forEach(cliente => {
+            const option = document.createElement('option');
+            option.value = cliente;
+            option.textContent = cliente;
+            select.appendChild(option);
+        });
+    }
+
+    // --- FUNCIONES DE DETALLES ---
+    function renderizarFichaTrabajo(trabajoId) {
+        const trabajo = trabajos.find(t => t.id === trabajoId);
+        if (!trabajo) return;
+        
+        const repuestosTrabajo = repuestos.filter(r => r.idTrabajo === trabajoId);
+        
+        let html = `
+            <div class="ficha-header">
+                ${trabajo.imagenVehiculo ? `<img src="${trabajo.imagenVehiculo}" alt="Imagen del vehículo">` : ''}
+                <div class="ficha-header-info">
+                    <h3>${trabajo.numCotizacion} - ${trabajo.nombreCliente}</h3>
+                    <p><strong>Placa:</strong> ${trabajo.placa}</p>
+                    <p><strong>Modelo:</strong> ${trabajo.modeloVehiculo}</p>
+                    <p><strong>Fecha de Ingreso:</strong> ${formatearFecha(trabajo.fechaIngreso)}</p>
+                    <p><strong>Estado:</strong> ${trabajo.estado}</p>
+                </div>
+            </div>
+            
+            <div class="ficha-report-section">
+                <h3>Lista de Repuestos</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Descripción</th>
+                            <th>Cantidad Cotizada</th>
+                            <th>Cantidad Recibida</th>
+                            <th>Estado</th>
+                            <th>Fecha Recepción</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+        
+        repuestosTrabajo.forEach(repuesto => {
+            html += `
+                <tr>
+                    <td>${repuesto.codigoRepuesto}</td>
+                    <td>${repuesto.descripcionRepuesto}</td>
+                    <td>${repuesto.cantidadCotizada}</td>
+                    <td>${repuesto.cantidadRecibida}</td>
+                    <td>${repuesto.estado}</td>
+                    <td>${formatearFecha(repuesto.fechaRecepcion)}</td>
+                    <td class="actions">
+                        <button class="small-btn edit-btn" onclick="editarRepuesto('${repuesto.id}')">Editar</button>
+                        <button class="small-btn delete-btn" onclick="eliminarRepuesto('${repuesto.id}')">Eliminar</button>
+                    </td>
+                </tr>
+            `;
+        });
+        
+        html += `
+                    </tbody>
+                </table>
+                
+                <div style="margin-top: 20px;">
+                    <button onclick="agregarRepuesto('${trabajoId}')">Agregar Repuesto</button>
+                </div>
+            </div>
+            
+            <div class="ficha-report-section">
+                <h3>Historial de Cambios</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fecha y Hora</th>
+                            <th>Repuesto</th>
+                            <th>Estado Anterior</th>
+                            <th>Estado Nuevo</th>
+                            <th>Cambiado por</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+        
+        const historialTrabajo = historialEstados.filter(h => {
+            const repuesto = repuestos.find(r => r.id === h.idRepuesto);
+            return repuesto && repuesto.idTrabajo === trabajoId;
+        });
+        
+        // Ordenar por fecha (más reciente primero)
+        historialTrabajo.sort((a, b) => new Date(b.fechaCambio) - new Date(a.fechaCambio));
+        
+        historialTrabajo.forEach(historial => {
+            html += `
+                <tr>
+                    <td>${formatearFechaHora(historial.fechaCambio)}</td>
+                    <td>${historial.codigoRepuesto}</td>
+                    <td>${historial.estadoAnterior || '-'}</td>
+                    <td>${historial.estadoNuevo}</td>
+                    <td>${historial.cambiadoPor}</td>
+                </tr>
+            `;
+        });
+        
+        html += `
+                    </tbody>
+                </table>
+            </div>
+        `;
+        
+        document.getElementById('contenidoFicha').innerHTML = html;
+    }
+
+    function renderizarDetallesTrabajoInvitado(trabajoId) {
+        const trabajo = trabajos.find(t => t.id === trabajoId);
+        if (!trabajo) return;
+        
+        const repuestosTrabajo = repuestos.filter(r => r.idTrabajo === trabajoId);
+        const totalRepuestos = repuestosTrabajo.length;
+        const repuestosRecibidos = repuestosTrabajo.filter(r => r.cantidadRecibida > 0).length;
+        const progreso = totalRepuestos > 0 ? Math.round((repuestosRecibidos / totalRepuestos) * 100) : 0;
+        
+        let html = `
+            <div class="invitado-detail-card">
+                <div class="invitado-detail-header">
+                    <h3>${trabajo.numCotizacion} - ${trabajo.nombreCliente}</h3>
+                    <div style="background-color: #e0e0e0; border-radius: 4px; height: 30px; position: relative;">
+                        <div style="background-color: #4caf50; height: 100%; width: ${progreso}%; border-radius: 4px;"></div>
+                        <span style="position: absolute; top: 0; left: 0; width: 100%; text-align: center; line-height: 30px; color: #333; font-size: 12px; font-weight: bold;">${progreso}% Completado</span>
+                    </div>
+                </div>
+                <div class="invitado-detail-info">
+                    <div>
+                        <p><strong>Placa:</strong> ${trabajo.placa}</p>
+                        <p><strong>Modelo:</strong> ${trabajo.modeloVehiculo}</p>
+                        <p><strong>Fecha de Ingreso:</strong> ${formatearFecha(trabajo.fechaIngreso)}</p>
+                    </div>
+                    <div>
+                        <p><strong>Estado:</strong> ${trabajo.estado}</p>
+                    </div>
+                </div>
+                <div class="invitado-detail-repuestos">
+                    <h4>Lista de Repuestos</h4>
+        `;
+        
+        repuestosTrabajo.forEach(repuesto => {
+            let statusClass = 'pending';
+            if (repuesto.estado === 'Facturado' || repuesto.cantidadRecibida >= repuesto.cantidadCotizada) {
+                statusClass = 'completed';
+            } else if (repuesto.estado === 'Pedido Especial' || repuesto.estado === 'En Revision por el CEDIS') {
+                statusClass = 'delayed';
+            }
+            
+            html += `
+                <div class="invitado-repuesto-item">
+                    <div class="invitado-repuesto-info">
+                        ${repuesto.linkImagen ? `<img src="${repuesto.linkImagen}" alt="${repuesto.descripcionRepuesto}" class="invitado-repuesto-image" onclick="abrirModalImagen('${repuesto.linkImagen}')">` : ''}
+                        <div>
+                            <p><strong>${repuesto.codigoRepuesto}</strong> - ${repuesto.descripcionRepuesto}</p>
+                            <p>Cantidad: ${repuesto.cantidadRecibida}/${repuesto.cantidadCotizada}</p>
+                        </div>
+                    </div>
+                    <div class="invitado-repuesto-status ${statusClass}">${repuesto.estado}</div>
+                </div>
+            `;
+        });
+        
+        html += `
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('contenidoTrabajoInvitado').innerHTML = html;
+    }
+
+    // --- FUNCIONES DE BÚSQUEDA ---
+    function buscarTrabajosInvitado() {
+        const filtro = document.getElementById('busquedaInvitado').value.toLowerCase();
+        const tbody = document.querySelector('#tablaTrabajosInvitado tbody');
+        tbody.innerHTML = '';
+        
+        const trabajosFiltrados = trabajos.filter(trabajo => 
+            trabajo.numCotizacion.toLowerCase().includes(filtro) ||
+            trabajo.nombreCliente.toLowerCase().includes(filtro) ||
+            trabajo.placa.toLowerCase().includes(filtro)
+        );
+        
+        trabajosFiltrados.forEach(trabajo => {
+            const repuestosTrabajo = repuestos.filter(r => r.idTrabajo === trabajo.id);
+            const totalRepuestos = repuestosTrabajo.length;
+            const repuestosRecibidos = repuestosTrabajo.filter(r => r.cantidadRecibida > 0).length;
+            const progreso = totalRepuestos > 0 ? Math.round((repuestosRecibidos / totalRepuestos) * 100) : 0;
+            
+            // Determinar clase de estado
+            let estadoClass = '';
+            if (trabajo.estado === 'Completado') estadoClass = 'invitado-status-completed';
+            else if (trabajo.estado === 'En Proceso') estadoClass = 'invitado-status-pending';
+            else estadoClass = 'invitado-status-delayed';
+            
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${trabajo.numCotizacion}</td>
+                <td>${formatearFecha(trabajo.fechaIngreso)}</td>
+                <td>${trabajo.nombreCliente}</td>
+                <td>${trabajo.placa}</td>
+                <td>${trabajo.modeloVehiculo}</td>
+                <td class="${estadoClass}">${trabajo.estado}</td>
+                <td>
+                    <div style="background-color: #e0e0e0; border-radius: 4px; height: 20px; position: relative;">
+                        <div style="background-color: #4caf50; height: 100%; width: ${progreso}%; border-radius: 4px;"></div>
+                        <span style="position: absolute; top: 0; left: 0; width: 100%; text-align: center; line-height: 20px; color: #333; font-size: 12px;">${progreso}%</span>
+                    </div>
+                </td>
+                <td class="actions">
+                    <button class="small-btn" onclick="verDetallesTrabajoInvitado('${trabajo.id}')">Ver Detalles</button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    function limpiarBusquedaInvitado() {
+        document.getElementById('busquedaInvitado').value = '';
+        renderizarTrabajosInvitado();
+    }
+
+    // --- FUNCIONES DE EXPORTACIÓN ---
+    function exportarAExcel() {
+        const workbook = XLSX.utils.book_new();
+        
+        // Hoja de trabajos
+        const trabajosWS = XLSX.utils.json_to_sheet(trabajos);
+        XLSX.utils.book_append_sheet(workbook, trabajosWS, "Trabajos");
+        
+        // Hoja de repuestos
+        const repuestosWS = XLSX.utils.json_to_sheet(repuestos);
+        XLSX.utils.book_append_sheet(workbook, repuestosWS, "Repuestos");
+        
+        // Hoja de historial
+        const historialWS = XLSX.utils.json_to_sheet(historialEstados);
+        XLSX.utils.book_append_sheet(workbook, historialWS, "Historial");
+        
+        XLSX.writeFile(workbook, "Sistema_Repuestos_Export.xlsx");
+        mostrarNotificacion('Exportación a Excel completada.', 'success');
+    }
+
+    function generarReporteIndividualExcel() {
+        const clienteSeleccionado = document.getElementById('selectClienteReporte').value;
+        if (!clienteSeleccionado) {
+            mostrarNotificacion('Por favor, seleccione un cliente.', 'warning');
+            return;
+        }
+        
+        // Filtrar trabajos por cliente
+        const trabajosCliente = trabajos.filter(t => t.nombreCliente === clienteSeleccionado);
+        
+        if (trabajosCliente.length === 0) {
+            mostrarNotificacion('No se encontraron trabajos para este cliente.', 'warning');
+            return;
+        }
+        
+        // Crear libro de Excel
+        const workbook = XLSX.utils.book_new();
+        
+        // Hoja de resumen
+        const resumenData = [
+            [`Reporte de ${clienteSeleccionado}`],
+            [`Fecha de generación: ${new Date().toLocaleDateString()}`],
+            [],
+            ['Total de Trabajos:', trabajosCliente.length],
+            ['Total de Repuestos:', repuestos.filter(r => trabajosCliente.some(t => t.id === r.idTrabajo)).length],
+            ['Repuestos Recibidos:', repuestos.filter(r => trabajosCliente.some(t => t.id === r.idTrabajo) && r.cantidadRecibida > 0).length],
+            [],
+            ['Trabajos del Cliente'],
+            ['N° Cotización', 'Fecha', 'Placa', 'Modelo', 'Estado']
+        ];
+        
+        trabajosCliente.forEach(trabajo => {
+            resumenData.push([
+                trabajo.numCotizacion,
+                formatearFecha(trabajo.fechaIngreso),
+                trabajo.placa,
+                trabajo.modeloVehiculo,
+                trabajo.estado
+            ]);
+        });
+        
+        const resumenWS = XLSX.utils.aoa_to_sheet(resumenData);
+        XLSX.utils.book_append_sheet(workbook, resumenWS, "Resumen");
+        
+        // Hoja de repuestos
+        const repuestosData = [['Repuestos del Cliente'], [], ['Código', 'Descripción', 'Cantidad Cotizada', 'Cantidad Recibida', 'Estado', 'Fecha Recepción', 'N° Cotización', 'Imagen']];
+        
+        trabajosCliente.forEach(trabajo => {
+            const repuestosTrabajo = repuestos.filter(r => r.idTrabajo === trabajo.id);
+            repuestosTrabajo.forEach(repuesto => {
+                repuestosData.push([
+                    repuesto.codigoRepuesto,
+                    repuesto.descripcionRepuesto,
+                    repuesto.cantidadCotizada,
+                    repuesto.cantidadRecibida,
+                    repuesto.estado,
+                    formatearFecha(repuesto.fechaRecepcion),
+                    trabajo.numCotizacion,
+                    repuesto.linkImagen || ''
+                ]);
+            });
+        });
+        
+        const repuestosWS = XLSX.utils.aoa_to_sheet(repuestosData);
+        XLSX.utils.book_append_sheet(workbook, repuestosWS, "Repuestos");
+        
+        // Hoja de historial
+        const historialData = [['Historial de Cambios'], [], ['Fecha y Hora', 'Repuesto', 'N° Cotización', 'Estado Anterior', 'Estado Nuevo', 'Cambiado por']];
+        
+        const idsTrabajosCliente = trabajosCliente.map(t => t.id);
+        const historialCliente = historialEstados.filter(h => {
+            const repuesto = repuestos.find(r => r.id === h.idRepuesto);
+            return repuesto && idsTrabajosCliente.includes(repuesto.idTrabajo);
+        });
+        
+        historialCliente.forEach(historial => {
+            historialData.push([
+                formatearFechaHora(historial.fechaCambio),
+                historial.codigoRepuesto,
+                historial.numCotizacion,
+                historial.estadoAnterior || '-',
+                historial.estadoNuevo,
+                historial.cambiadoPor
+            ]);
+        });
+        
+        const historialWS = XLSX.utils.aoa_to_sheet(historialData);
+        XLSX.utils.book_append_sheet(workbook, historialWS, "Historial");
+        
+        // Descargar el archivo
+        XLSX.writeFile(workbook, `Reporte_${clienteSeleccionado.replace(/ /g, '_')}.xlsx`);
+        mostrarNotificacion('Reporte generado correctamente.', 'success');
+    }
+
+    function generarReporteInvitadoExcel() {
+        const clienteSeleccionado = document.getElementById('selectClienteReporteInvitado').value;
+        if (!clienteSeleccionado) {
+            mostrarNotificacion('Por favor, seleccione un cliente.', 'warning');
+            return;
+        }
+        
+        // Filtrar trabajos por cliente
+        const trabajosCliente = trabajos.filter(t => t.nombreCliente === clienteSeleccionado);
+        
+        if (trabajosCliente.length === 0) {
+            mostrarNotificacion('No se encontraron trabajos para este cliente.', 'warning');
+            return;
+        }
+        
+        // Crear libro de Excel
+        const workbook = XLSX.utils.book_new();
+        
+        // Hoja de resumen
+        const resumenData = [
+            [`Reporte de ${clienteSeleccionado}`],
+            [`Fecha de generación: ${new Date().toLocaleDateString()}`],
+            [],
+            ['Total de Trabajos:', trabajosCliente.length],
+            ['Total de Repuestos:', repuestos.filter(r => trabajosCliente.some(t => t.id === r.idTrabajo)).length],
+            ['Repuestos Recibidos:', repuestos.filter(r => trabajosCliente.some(t => t.id === r.idTrabajo) && r.cantidadRecibida > 0).length],
+            [],
+            ['Trabajos del Cliente'],
+            ['N° Cotización', 'Fecha', 'Placa', 'Modelo', 'Estado']
+        ];
+        
+        trabajosCliente.forEach(trabajo => {
+            resumenData.push([
+                trabajo.numCotizacion,
+                formatearFecha(trabajo.fechaIngreso),
+                trabajo.placa,
+                trabajo.modeloVehiculo,
+                trabajo.estado
+            ]);
+        });
+        
+        const resumenWS = XLSX.utils.aoa_to_sheet(resumenData);
+        XLSX.utils.book_append_sheet(workbook, resumenWS, "Resumen");
+        
+        // Hoja de repuestos
+        const repuestosData = [['Repuestos del Cliente'], [], ['Código', 'Descripción', 'Cantidad Cotizada', 'Cantidad Recibida', 'Estado', 'Fecha Recepción', 'N° Cotización', 'Imagen']];
+        
+        trabajosCliente.forEach(trabajo => {
+            const repuestosTrabajo = repuestos.filter(r => r.idTrabajo === trabajo.id);
+            repuestosTrabajo.forEach(repuesto => {
+                repuestosData.push([
+                    repuesto.codigoRepuesto,
+                    repuesto.descripcionRepuesto,
+                    repuesto.cantidadCotizada,
+                    repuesto.cantidadRecibida,
+                    repuesto.estado,
+                    formatearFecha(repuesto.fechaRecepcion),
+                    trabajo.numCotizacion,
+                    repuesto.linkImagen || ''
+                ]);
+            });
+        });
+        
+        const repuestosWS = XLSX.utils.aoa_to_sheet(repuestosData);
+        XLSX.utils.book_append_sheet(workbook, repuestosWS, "Repuestos");
+        
+        // Hoja de historial
+        const historialData = [['Historial de Cambios'], [], ['Fecha y Hora', 'Repuesto', 'N° Cotización', 'Estado Anterior', 'Estado Nuevo', 'Cambiado por']];
+        
+        const idsTrabajosCliente = trabajosCliente.map(t => t.id);
+        const historialCliente = historialEstados.filter(h => {
+            const repuesto = repuestos.find(r => r.id === h.idRepuesto);
+            return repuesto && idsTrabajosCliente.includes(repuesto.idTrabajo);
+        });
+        
+        historialCliente.forEach(historial => {
+            historialData.push([
+                formatearFechaHora(historial.fechaCambio),
+                historial.codigoRepuesto,
+                historial.numCotizacion,
+                historial.estadoAnterior || '-',
+                historial.estadoNuevo,
+                historial.cambiadoPor
+            ]);
+        });
+        
+        const historialWS = XLSX.utils.aoa_to_sheet(historialData);
+        XLSX.utils.book_append_sheet(workbook, historialWS, "Historial");
+        
+        // Descargar el archivo
+        XLSX.writeFile(workbook, `Reporte_${clienteSeleccionado.replace(/ /g, '_')}.xlsx`);
+        mostrarNotificacion('Reporte generado correctamente.', 'success');
+    }
+
+    function generarReporteIndividualPDF() {
+        mostrarNotificacion("Funcionalidad de PDF en desarrollo. Use la exportación a Excel por ahora.", 'warning');
+    }
+
+    function generarReporteInvitadoPDF() {
+        mostrarNotificacion("Funcionalidad de PDF para invitados en desarrollo. Use la exportación a Excel por ahora.", 'warning');
+    }
+
+    // --- FUNCIONES DE MODAL ---
+    function abrirModalImagen(url) {
+        const modal = document.getElementById('imageModal');
+        const modalImg = document.getElementById('modalImage');
+        
+        modal.style.display = 'block';
+        modalImg.src = url;
+    }
+
+    function cerrarModalImagen() {
+        document.getElementById('imageModal').style.display = 'none';
+    }
+
+    // --- FUNCIONES DE EDICIÓN Y ELIMINACIÓN ---
+    function editarTrabajo(trabajoId) {
+        const trabajo = trabajos.find(t => t.id === trabajoId);
+        if (!trabajo) return;
+        
+        // Llenar el formulario con los datos del trabajo
+        document.getElementById('numCotizacion').value = trabajo.numCotizacion;
+        document.getElementById('nombreCliente').value = trabajo.nombreCliente;
+        document.getElementById('placa').value = trabajo.placa;
+        document.getElementById('modeloVehiculo').value = trabajo.modeloVehiculo;
+        document.getElementById('imagenVehiculo').value = trabajo.imagenVehiculo || '';
+        
+        // Cambiar el título del formulario
+        document.querySelector('#trabajos h2').textContent = 'Editar Trabajo';
+        
+        // Cambiar el evento submit para actualizar en lugar de crear
+        const form = document.getElementById('formTrabajo');
+        form.onsubmit = async function(e) {
+            e.preventDefault();
+            
+            // Actualizar los datos del trabajo
+            trabajo.numCotizacion = document.getElementById('numCotizacion').value;
+            trabajo.nombreCliente = document.getElementById('nombreCliente').value;
+            trabajo.placa = document.getElementById('placa').value;
+            trabajo.modeloVehiculo = document.getElementById('modeloVehiculo').value;
+            trabajo.imagenVehiculo = document.getElementById('imagenVehiculo').value;
+            
+            // Guardar cambios
+            await guardarDatos();
+            renderizarTrabajos();
+            
+            // Restaurar el formulario para crear nuevos trabajos
+            document.querySelector('#trabajos h2').textContent = 'Crear Nuevo Trabajo (Individual)';
+            form.reset();
+            form.onsubmit = originalFormSubmitHandler;
+            
+            mostrarNotificacion('Trabajo actualizado correctamente.', 'success');
+        };
+        
+        // Guardar el manejador original para restaurarlo después
+        const originalFormSubmitHandler = form.onsubmit;
+    }
+
+    async function eliminarTrabajo(trabajoId) {
+        if (!confirm('¿Está seguro de que desea eliminar este trabajo? También se eliminarán todos los repuestos asociados.')) {
+            return;
+        }
+        
+        // Eliminar el trabajo
+        const trabajoIndex = trabajos.findIndex(t => t.id === trabajoId);
+        if (trabajoIndex !== -1) {
+            trabajos.splice(trabajoIndex, 1);
+        }
+        
+        // Eliminar los repuestos asociados
+        repuestos = repuestos.filter(r => r.idTrabajo !== trabajoId);
+        
+        // Eliminar el historial asociado
+        const idsRepuestosAEliminar = repuestos.filter(r => r.idTrabajo === trabajoId).map(r => r.id);
+        historialEstados = historialEstados.filter(h => !idsRepuestosAEliminar.includes(h.idRepuesto));
+        
+        // Guardar cambios
+        await guardarDatos();
+        renderizarTrabajos();
+        
+        mostrarNotificacion('Trabajo eliminado correctamente.', 'success');
+    }
+
+    function verFichaTrabajo(trabajoId) {
+        // Cambiar a la pestaña de ficha
+        document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        
+        document.querySelector('button[onclick="showTab(\'ficha\')"]').classList.add('active');
+        document.getElementById('ficha').classList.add('active');
+        
+        // Seleccionar el trabajo en el select
+        document.getElementById('selectTrabajoFicha').value = trabajoId;
+        
+        // Renderizar la ficha
+        renderizarFichaTrabajo(trabajoId);
+    }
+
+    function verDetallesTrabajoInvitado(trabajoId) {
+        // Cambiar a la pestaña de detalles
+        document.querySelectorAll('.invitado-tab-button').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.invitado-tab-content').forEach(tab => tab.classList.remove('active'));
+        
+        document.querySelector('button[onclick="showInvitadoTab(\'detalles\')"]').classList.add('active');
+        document.getElementById('detalles').classList.add('active');
+        
+        // Seleccionar el trabajo en el select
+        document.getElementById('selectTrabajoInvitado').value = trabajoId;
+        
+        // Renderizar los detalles
+        renderizarDetallesTrabajoInvitado(trabajoId);
+    }
+
+    function agregarRepuesto(trabajoId) {
+        // Crear un formulario para agregar un nuevo repuesto
+        const trabajo = trabajos.find(t => t.id === trabajoId);
+        if (!trabajo) return;
+        
+        const formHtml = `
+            <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-top: 20px;">
+                <h3>Agregar Nuevo Repuesto</h3>
+                <form id="formNuevoRepuesto">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="form-group">
+                            <label for="codigoRepuesto">Código del Repuesto:</label>
+                            <input type="text" id="codigoRepuesto" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="cantidadCotizada">Cantidad Cotizada:</label>
+                            <input type="number" id="cantidadCotizada" min="1" required>
+                        </div>
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label for="descripcionRepuesto">Descripción del Repuesto:</label>
+                            <input type="text" id="descripcionRepuesto" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="cantidadRecibida">Cantidad Recibida:</label>
+                            <input type="number" id="cantidadRecibida" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="estadoRepuesto">Estado:</label>
+                            <select id="estadoRepuesto">
+                                ${ESTADOS_REPUESTO.map(estado => `<option value="${estado}">${estado}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="fechaRecepcion">Fecha de Recepción:</label>
+                            <input type="date" id="fechaRecepcion">
+                        </div>
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label for="linkImagen">URL de la Imagen:</label>
+                            <input type="url" id="linkImagen" placeholder="https://...">
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <button type="submit">Guardar Repuesto</button>
+                        <button type="button" onclick="cancelarAgregarRepuesto()">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        `;
+        
+        // Agregar el formulario al DOM
+        const container = document.createElement('div');
+        container.innerHTML = formHtml;
+        document.getElementById('contenidoFicha').appendChild(container);
+        
+        // Configurar el evento submit
+        document.getElementById('formNuevoRepuesto').onsubmit = async function(e) {
+            e.preventDefault();
+            
+            // Crear el nuevo repuesto
+            const nuevoRepuesto = {
+                id: 'REP-' + Date.now(),
+                idTrabajo: trabajoId,
+                numCotizacion: trabajo.numCotizacion,
+                codigoRepuesto: document.getElementById('codigoRepuesto').value,
+                descripcionRepuesto: document.getElementById('descripcionRepuesto').value,
+                cantidadCotizada: parseInt(document.getElementById('cantidadCotizada').value),
+                cantidadRecibida: parseInt(document.getElementById('cantidadRecibida').value) || 0,
+                estado: document.getElementById('estadoRepuesto').value,
+                fechaRecepcion: document.getElementById('fechaRecepcion').value,
+                linkImagen: document.getElementById('linkImagen').value
+            };
+            
+            // Agregar el repuesto a la lista
+            repuestos.push(nuevoRepuesto);
+            
+            // Agregar al historial
+            historialEstados.push({
+                idHistorial: 'HIST-' + Date.now(),
+                idRepuesto: nuevoRepuesto.id,
+                numCotizacion: trabajo.numCotizacion,
+                codigoRepuesto: nuevoRepuesto.codigoRepuesto,
+                descripcionRepuesto: nuevoRepuesto.descripcionRepuesto,
+                estadoAnterior: '',
+                estadoNuevo: nuevoRepuesto.estado,
+                fechaCambio: new Date().toISOString(),
+                cambiadoPor: usuarioActual.nombre
+            });
+            
+            // Guardar cambios
+            await guardarDatos();
+            
+            // Actualizar la vista
+            renderizarFichaTrabajo(trabajoId);
+            
+            mostrarNotificacion('Repuesto agregado correctamente.', 'success');
+        };
+    }
+
+    function cancelarAgregarRepuesto() {
+        // Eliminar el formulario de agregar repuesto
+        const formContainer = document.querySelector('#contenidoFicha > div:last-child');
+        if (formContainer && formContainer.querySelector('#formNuevoRepuesto')) {
+            formContainer.remove();
+        }
+    }
+
+    function editarRepuesto(repuestoId) {
+        const repuesto = repuestos.find(r => r.id === repuestoId);
+        if (!repuesto) return;
+        
+        const trabajo = trabajos.find(t => t.id === repuesto.idTrabajo);
+        if (!trabajo) return;
+        
+        // Crear un formulario para editar el repuesto
+        const formHtml = `
+            <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-top: 20px;">
+                <h3>Editar Repuesto</h3>
+                <form id="formEditarRepuesto">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="form-group">
+                            <label for="editCodigoRepuesto">Código del Repuesto:</label>
+                            <input type="text" id="editCodigoRepuesto" value="${repuesto.codigoRepuesto}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editCantidadCotizada">Cantidad Cotizada:</label>
+                            <input type="number" id="editCantidadCotizada" value="${repuesto.cantidadCotizada}" min="1" required>
+                        </div>
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label for="editDescripcionRepuesto">Descripción del Repuesto:</label>
+                            <input type="text" id="editDescripcionRepuesto" value="${repuesto.descripcionRepuesto}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editCantidadRecibida">Cantidad Recibida:</label>
+                            <input type="number" id="editCantidadRecibida" value="${repuesto.cantidadRecibida}" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="editEstadoRepuesto">Estado:</label>
+                            <select id="editEstadoRepuesto">
+                                ${ESTADOS_REPUESTO.map(estado => `<option value="${estado}" ${estado === repuesto.estado ? 'selected' : ''}>${estado}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="editFechaRecepcion">Fecha de Recepción:</label>
+                            <input type="date" id="editFechaRecepcion" value="${repuesto.fechaRecepcion}">
+                        </div>
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label for="editLinkImagen">URL de la Imagen:</label>
+                            <input type="url" id="editLinkImagen" value="${repuesto.linkImagen || ''}" placeholder="https://...">
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <button type="submit">Guardar Cambios</button>
+                        <button type="button" onclick="cancelarEditarRepuesto()">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        `;
+        
+        // Agregar el formulario al DOM
+        const container = document.createElement('div');
+        container.innerHTML = formHtml;
+        document.getElementById('contenidoFicha').appendChild(container);
+        
+        // Configurar el evento submit
+        document.getElementById('formEditarRepuesto').onsubmit = async function(e) {
+            e.preventDefault();
+            
+            // Guardar el estado anterior para el historial
+            const estadoAnterior = repuesto.estado;
+            
+            // Actualizar los datos del repuesto
+            repuesto.codigoRepuesto = document.getElementById('editCodigoRepuesto').value;
+            repuesto.descripcionRepuesto = document.getElementById('editDescripcionRepuesto').value;
+            repuesto.cantidadCotizada = parseInt(document.getElementById('editCantidadCotizada').value);
+            repuesto.cantidadRecibida = parseInt(document.getElementById('editCantidadRecibida').value) || 0;
+            repuesto.estado = document.getElementById('editEstadoRepuesto').value;
+            repuesto.fechaRecepcion = document.getElementById('editFechaRecepcion').value;
+            repuesto.linkImagen = document.getElementById('editLinkImagen').value;
+            
+            // Agregar al historial si el estado cambió
+            if (estadoAnterior !== repuesto.estado) {
+                historialEstados.push({
+                    idHistorial: 'HIST-' + Date.now(),
+                    idRepuesto: repuesto.id,
+                    numCotizacion: trabajo.numCotizacion,
+                    codigoRepuesto: repuesto.codigoRepuesto,
+                    descripcionRepuesto: repuesto.descripcionRepuesto,
+                    estadoAnterior: estadoAnterior,
+                    estadoNuevo: repuesto.estado,
+                    fechaCambio: new Date().toISOString(),
+                    cambiadoPor: usuarioActual.nombre
+                });
+            }
+            
+            // Guardar cambios
+            await guardarDatos();
+            
+            // Actualizar la vista
+            renderizarFichaTrabajo(trabajo.id);
+            
+            mostrarNotificacion('Repuesto actualizado correctamente.', 'success');
+        };
+    }
+
+    function cancelarEditarRepuesto() {
+        // Eliminar el formulario de editar repuesto
+        const formContainer = document.querySelector('#contenidoFicha > div:last-child');
+        if (formContainer && formContainer.querySelector('#formEditarRepuesto')) {
+            formContainer.remove();
+        }
+    }
+
+    async function eliminarRepuesto(repuestoId) {
+        if (!confirm('¿Está seguro de que desea eliminar este repuesto?')) {
+            return;
+        }
+        
+        const repuesto = repuestos.find(r => r.id === repuestoId);
+        if (!repuesto) return;
+        
+        const trabajo = trabajos.find(t => t.id === repuesto.idTrabajo);
+        if (!trabajo) return;
+        
+        // Eliminar el repuesto
+        const repuestoIndex = repuestos.findIndex(r => r.id === repuestoId);
+        if (repuestoIndex !== -1) {
+            repuestos.splice(repuestoIndex, 1);
+        }
+        
+        // Eliminar el historial asociado
+        historialEstados = historialEstados.filter(h => h.idRepuesto !== repuestoId);
+        
+        // Guardar cambios
+        await guardarDatos();
+        
+        // Actualizar la vista
+        renderizarFichaTrabajo(trabajo.id);
+        
+        mostrarNotificacion('Repuesto eliminado correctamente.', 'success');
+    }
+
+    // --- INICIALIZACIÓN ---
+    document.addEventListener('DOMContentLoaded', function() {
+        // Cargar las APIs de Google
+        gapiLoaded();
+        gisLoaded();
+        
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            if (username === 'admin' && password === 'admin') {
+                usuarioActual = { rol: 'admin', nombre: 'Administrador' };
+                iniciarAppAdmin();
+            } else if (username === 'invitado' && password === 'invitado') {
+                usuarioActual = { rol: 'invitado', nombre: 'Invitado' };
+                iniciarAppInvitado();
+            } else {
+                mostrarNotificacion('Usuario o contraseña incorrectos.', 'error');
+            }
+        });
+        
+        document.getElementById('formTrabajo').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const nuevoTrabajo = {
+                id: 'TRAB-' + Date.now(),
+                numCotizacion: document.getElementById('numCotizacion').value,
+                fechaIngreso: new Date().toISOString(),
+                nombreCliente: document.getElementById('nombreCliente').value,
+                placa: document.getElementById('placa').value,
+                modeloVehiculo: document.getElementById('modeloVehiculo').value,
+                imagenVehiculo: document.getElementById('imagenVehiculo').value,
+                estado: 'Pendiente'
+            };
+            trabajos.push(nuevoTrabajo);
+            await guardarDatos();
+            renderizarTrabajos();
+            this.reset();
+            mostrarNotificacion('Trabajo creado correctamente.', 'success');
+        });
+        
+        document.getElementById('formTrabajoMasivo').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const nuevoTrabajo = {
+                id: 'TRAB-' + Date.now(),
+                numCotizacion: document.getElementById('numCotizacionMasivo').value,
+                fechaIngreso: new Date().toISOString(),
+                nombreCliente: document.getElementById('nombreClienteMasivo').value,
+                placa: document.getElementById('placaMasivo').value,
+                modeloVehiculo: document.getElementById('modeloVehiculoMasivo').value,
+                imagenVehiculo: document.getElementById('imagenVehiculo').value,
+                estado: 'Pendiente'
+            };
+            trabajos.push(nuevoTrabajo);
+            
+            const textoRepuestos = document.getElementById('textoRepuestosMasivosTrabajo').value;
+            const lineas = textoRepuestos.split('\n');
+            let contadorRepuestos = 0;
+            
+            lineas.forEach(linea => {
+                const partes = linea.split('\t');
+                if (partes.length >= 3) {
+                    const nuevoRepuesto = {
+                        id: 'REP-' + Date.now() + Math.random(),
+                        idTrabajo: nuevoTrabajo.id,
+                        numCotizacion: nuevoTrabajo.numCotizacion,
+                        codigoRepuesto: partes[0],
+                        descripcionRepuesto: partes[1],
+                        cantidadCotizada: parseInt(partes[2]),
+                        cantidadRecibida: partes.length >= 4 ? parseInt(partes[3]) : 0,
+                        estado: 'Solicitado a CEDIS',
+                        fechaRecepcion: '',
+                        link: '',
+                        linkImagen: ''
+                    };
+                    repuestos.push(nuevoRepuesto);
+                    historialEstados.push({
+                        idHistorial: 'HIST-' + Date.now() + Math.random(),
+                        idRepuesto: nuevoRepuesto.id,
+                        numCotizacion: nuevoTrabajo.numCotizacion,
+                        codigoRepuesto: partes[0],
+                        descripcionRepuesto: partes[1],
+                        estadoAnterior: '',
+                        estadoNuevo: 'Solicitado a CEDIS',
+                        fechaCambio: new Date().toISOString(),
+                        cambiadoPor: usuarioActual.nombre
+                    });
+                    contadorRepuestos++;
+                }
+            });
+            
+            await guardarDatos();
+            renderizarTrabajos();
+            this.reset();
+            mostrarNotificacion(`Trabajo y ${contadorRepuestos} repuestos creados correctamente.`, 'success');
+        });
+    });
+</script>
+</body>
+</html>
