@@ -719,7 +719,7 @@
         <h2>Auditoría y KPIs del Sistema</h2>
         <div class="dashboard-grid">
             <div class="dashboard-card"><h3>Efectividad General de Repuestos</h3><div class="metric-card" id="metricEfectividad">0%</div></div></div>
-            <div class="dashboard-card"><h3>Total de Trabajos Activos</h3><div class="metric-card" id="metricTrabajos">0</div></div>
+            <div class="dashboard-card"><h3>Total de Trabajos Activos</h3><div class="metric-card" id="metricTrabajos">0</div></div></div>
             <div class="dashboard-card"><h3>Total de Repuestos en Proceso</h3><div class="metric-card" id="metricRepuestos">0</div></div>
             <div class="dashboard-card"><h3>Tiempo Promedio de Espera (días)</h3><div class="metric-card" id="metricTiempoPromedio">0</div></div>
         </div>
@@ -758,6 +758,7 @@
 
     <button class="export-btn" onclick="exportarAExcel()">📊 Exportar Todo a Excel</button>
     <button onclick="cerrarSesion()" style="background-color: #dc3545; margin-left: 10px;">Cerrar Sesión</button>
+</div>
 </div>
 </div>
 
@@ -1120,10 +1121,11 @@
         e.preventDefault();
         const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
-        if (username === 'admin' && password === 'admin') {
+        
+        if (username === 'admin' && password === 'admin01') {
             usuarioActual = { rol: 'admin', nombre: 'Administrador' };
             iniciarAppAdmin();
-        } else if (username === 'invitado' && password === 'invitado') {
+        } else if (username === 'invitado' && password === 'invitado01') {
             usuarioActual = { rol: 'invitado', nombre: 'Invitado' };
             iniciarAppInvitado();
         } else {
@@ -1555,6 +1557,27 @@
         });
     }
 
+    // --- FUNCIONES DE EXPORTACIÓN ---
+    function exportarAExcel() {
+        const workbook = XLSX.utils.book_new();
+        
+        // Hoja de trabajos
+        const trabajosWS = XLSX.utils.json_to_sheet(trabajos);
+        XLSX.utils.book_append_sheet(workbook, trabajosWS, "Trabajos");
+        
+        // Hoja de repuestos
+        const repuestosWS = XLSX.utils.json_to_sheet(repuestos);
+        XLSX.utils.book_append_sheet(workbook, repuestosWS, "Repuestos");
+        
+        // Hoja de historial
+        const historialWS = XLSX.utils.json_to_sheet(historialEstados);
+        XLSX.utils.book_append_sheet(workbook, historialWS, "Historial");
+        
+        XLSX.writeFile(workbook, "Sistema_Repuestos_Export.xlsx");
+        mostrarNotificacion('Exportación a Excel completada.', 'success');
+    }
+
+    // --- FUNCIONES DE REPORTES ---
     function renderizarReportesInvitado() {
         const totalTrabajos = trabajos.length;
         const totalRepuestos = repuestos.length;
@@ -1792,6 +1815,7 @@
                 <tr>
                     <td>${formatearFechaHora(historial.fechaCambio)}</td>
                     <td>${historial.codigoRepuesto}</td>
+                    <td>${historial.numCotizacion}</td>
                     <td>${historial.estadoAnterior || '-'}</td>
                     <td>${historial.estadoNuevo}</td>
                     <td>${historial.cambiadoPor}</td>
@@ -1853,10 +1877,11 @@
                     <div class="invitado-repuesto-info">
                         ${repuesto.linkImagen ? `<img src="${repuesto.linkImagen}" alt="${repuesto.descripcionRepuesto}" class="invitado-repuesto-image" onclick="abrirModalImagen('${repuesto.linkImagen}')">` : ''}
                         <div>
-                            <p><strong>${repuesto.codigoRepuesto}</strong> - ${repuesto.descripcionRepuesto}</p>
-                            <p>Cantidad: ${repuesto.cantidadRecibida}/${repuesto.cantidadCotizada}</p>
+                            <div>
+                                <p><strong>${repuesto.codigoRepuesto}</strong> - ${repuesto.descripcionRepuesto}</p>
+                                <p>Cantidad: ${repuesto.cantidadRecibida}/${repuesto.cantidadCotizada}</p>
+                            </div>
                         </div>
-                    </div>
                     <div class="invitado-repuesto-status ${statusClass}">${repuesto.estado}</div>
                 </div>
             `;
@@ -1941,96 +1966,133 @@
         mostrarNotificacion('Exportación a Excel completada.', 'success');
     }
 
-    function generarReporteIndividualExcel() {
-        const clienteSeleccionado = document.getElementById('selectClienteReporte').value;
-        if (!clienteSeleccionado) {
-            mostrarNotificacion('Por favor, seleccione un cliente.', 'warning');
-            return;
-        }
+    // --- FUNCIONES DE MODAL ---
+    function abrirModalImagen(url) {
+        const modal = document.getElementById('imageModal');
+        const modalImg = document.getElementById('modalImage');
         
-        // Filtrar trabajos por cliente
-        const trabajosCliente = trabajos.filter(t => t.nombreCliente === clienteSeleccionado);
+        modal.style.display = 'block';
+        modalImg.src = url;
+    }
+
+    function cerrarModalImagen() {
+        document.getElementById('imageModal').style.display = 'none';
+    }
+
+    // --- MANEJADORES DE FORMULARIOS CORREGIDOS ---
+    async function handleFormTrabajoSubmit(e) {
+        e.preventDefault();
+        const nuevoTrabajo = {
+            id: 'TRAB-' + Date.now(),
+            numCotizacion: document.getElementById('numCotizacion').value,
+            fechaIngreso: new Date().toISOString(),
+            nombreCliente: document.getElementById('nombreCliente').value,
+            placa: document.getElementById('placa').value,
+            modeloVehiculo: document.getElementById('modeloVehiculo').value,
+            imagenVehiculo: document.getElementById('imagenVehiculo').value,
+            estado: 'Pendiente'
+        };
+        trabajos.push(nuevoTrabajo);
+        await guardarDatos();
+        renderizarTrabajos();
+        this.reset();
+        mostrarNotificacion('Trabajo creado correctamente.', 'success');
+    }
+
+    async function handleFormTrabajoMasivoSubmit(e) {
+        e.preventDefault();
+        const nuevoTrabajo = {
+            id: 'TRAB-' + Date.now(),
+            numCotizacion: document.getElementById('numCotizacionMasivo').value,
+            fechaIngreso: new Date().toISOString(),
+            nombreCliente: document.getElementById('nombreClienteMasivo').value,
+            placa: document.getElementById('placaMasivo').value,
+            modeloVehiculo: document.getElementById('modeloVehiculoMasivo').value,
+            imagenVehiculo: document.getElementById('imagenVehiculo').value,
+            estado: 'Pendiente'
+        };
+        trabajos.push(nuevoTrabajo);
         
-        if (trabajosCliente.length === 0) {
-            mostrarNotificacion('No se encontraron trabajos para este cliente.', 'warning');
-            return;
-        }
+        const textoRepuestos = document.getElementById('textoRepuestosMasivosTrabajo').value;
+        const lineas = textoRepuestos.split('\n');
+        let contadorRepuestos = 0;
         
-        // Crear libro de Excel
-        const workbook = XLSX.utils.book_new();
-        
-        // Hoja de resumen
-        const resumenData = [
-            [`Reporte de ${clienteSeleccionado}`],
-            [`Fecha de generación: ${new Date().toLocaleDateString()}`],
-            [],
-            ['Total de Trabajos:', trabajosCliente.length],
-            ['Total de Repuestos:', repuestos.filter(r => trabajosCliente.some(t => t.id === r.idTrabajo)).length],
-            ['Repuestos Recibidos:', repuestos.filter(r => trabajosCliente.some(t => t.id === r.idTrabajo) && r.cantidadRecibida > 0).length],
-            [],
-            ['Trabajos del Cliente'],
-            ['N° Cotización', 'Fecha', 'Placa', 'Modelo', 'Estado']
-        ];
-        
-        trabajosCliente.forEach(trabajo => {
-            resumenData.push([
-                trabajo.numCotizacion,
-                formatearFecha(trabajo.fechaIngreso),
-                trabajo.placa,
-                trabajo.modeloVehiculo,
-                trabajo.estado
-            ]);
-        });
-        
-        const resumenWS = XLSX.utils.aoa_to_sheet(resumenData);
-        XLSX.utils.book_append_sheet(workbook, resumenWS, "Resumen");
-        
-        // Hoja de repuestos
-        const repuestosData = [['Repuestos del Cliente'], [], ['Código', 'Descripción', 'Cantidad Cotizada', 'Cantidad Recibida', 'Estado', 'Fecha Recepción', 'N° Cotización', 'Imagen']];
-        
-        trabajosCliente.forEach(trabajo => {
-            const repuestosTrabajo = repuestos.filter(r => r.idTrabajo === trabajo.id);
-            repuestosTrabajo.forEach(repuesto => {
-                repuestosData.push([
-                    repuesto.codigoRepuesto,
-                    repuesto.descripcionRepuesto,
-                    repuesto.cantidadCotizada,
-                    repuesto.cantidadRecibida,
-                    repuesto.estado,
-                    formatearFecha(repuesto.fechaRecepcion),
-                    trabajo.numCotizacion,
-                    repuesto.linkImagen || ''
-                ]);
+        lineas.forEach(linea => {
+            const partes = linea.split('\t');
+            if (partes.length >= 3) {
+                const nuevoRepuesto = {
+                    id: 'REP-' + Date.now() + Math.random(),
+                    idTrabajo: nuevoTrabajo.id,
+                    numCotizacion: nuevoTrabajo.numCotizacion,
+                    descripcionRepuesto: partes[1],
+                    cantidadCotizada: parseInt(partes[2]),
+                    cantidadRecibida: partes.length >= 4 ? parseInt(partes[3]) : 0,
+                    estado: 'Solicitado a CEDIS',
+                    fechaRecepcion: '',
+                    link: '',
+                    linkImagen: ''
+                };
+                repuestos.push(nuevoRepuesto);
+                historialEstados.push({
+                    idHistorial: 'HIST-' + Date.now() + Math.random(),
+                    idRepuesto: nuevoRepuesto.id,
+                    numCotizacion: nuevoTrabajo.numCotizacion,
+                    codigoRepuesto: partes[0],
+                    descripcionRepuesto: partes[1],
+                    cantidadCotizada: parseInt(partes[2]),
+                    cantidadRecibida: partes.length >= 4 ? parseInt(partes[3]) : 0,
+                    estado: 'Solicitado a CEDIS',
+                    fechaRecepcion: '',
+                    link: '',
+                    linkImagen: ''
+                });
+                historialEstados.push({
+                    idHistorial: 'HIST-' + Date.now() + Math.random(),
+                    idRepuesto: nuevoRepuesto.id,
+                    numCotizacion: nuevoTrabajo.numCotizacion,
+                    codigoRepuesto: partes[0],
+                    descripcionRepuesto: partes[1],
+                    cantidadCotizada: parseInt(partes[2]),
+                    cantidadRecibida: partes.length >= 4 ? parseInt(partes[3]) : 0,
+                    estado: 'Solicitado a CEDIS',
+                    fechaRecepcion: '',
+                    link: '',
+                    linkImagen: ''
+                });
+                contadorRepuestos++;
             });
         });
         
-        const repuestosWS = XLSX.utils.aoa_to_sheet(repuestosData);
-        XLSX.utils.book_append_sheet(workbook, repuestosWS, "Repuestos");
-        
-        // Hoja de historial
-        const historialData = [['Historial de Cambios'], [], ['Fecha y Hora', 'Repuesto', 'N° Cotización', 'Estado Anterior', 'Estado Nuevo', 'Cambiado por']];
-        
-        const idsTrabajosCliente = trabajosCliente.map(t => t.id);
-        const historialCliente = historialEstados.filter(h => {
-            const repuesto = repuestos.find(r => r.id === h.idRepuesto);
-            return repuesto && idsTrabajosCliente.includes(repuesto.idTrabajo);
-        });
-        
-        historialCliente.forEach(historial => {
-            historialData.push([
-                formatearFechaHora(historial.fechaCambio),
-                historial.codigoRepuesto,
-                historial.numCotizacion,
-                historial.estadoAnterior || '-',
-                historial.estadoNuevo,
-                historial.cambiadoPor
-            ]);
-        });
-        
-        const historialWS = XLSX.utils.aoa_to_sheet(historialData);
-        XLSX.utils.book_append_sheet(workbook, historialWS, "Historial");
-        
-        // Descargar el archivo
-        XLSX.writeFile(workbook, `Reporte_${clienteSeleccionado.replace(/ /g, '_')}.xlsx`);
-        mostrarNotificacion('Reporte generado correctamente.', 'success');
+        await guardarDatos();
+        renderizarTrabajos();
+        this.reset();
+        mostrarNotificación(`Trabajo y ${contadorRepuestos} repuestos creados correctamente.`, 'success');
     }
+
+    // --- INICIALIZACIÓN ---
+    document.addEventListener('DOMContentLoaded', function() {
+        // Cargar las APIs de Google
+        gapiLoaded();
+        gisLoaded();
+        
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            if (username === 'admin' && password === 'admin01') {
+                usuarioActual = { rol: 'admin', nombre: 'Administrador' };
+                iniciarAppAdmin();
+            } else if (username === 'invitado' && password === 'invitado01') {
+                usuarioActual = { rol: 'invitado', nombre: 'Invitado' };
+                iniciarAppInvitado();
+            } else {
+                mostrarNotificacion('Usuario o contraseña incorrectos.', 'error');
+            }
+        });
+        
+        document.getElementById('formTrabajo').addEventListener('submit', handleFormTrabajoSubmit);
+        document.getElementById('formTrabajoMasivo').addEventListener('submit', handleFormTrabajoMasivoSubmit);
+    });
+    </script>
+</body>
+</html>
