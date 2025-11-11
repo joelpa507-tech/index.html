@@ -1338,10 +1338,10 @@
         if (chartEstados) chartEstados.destroy();
         chartEstados = new Chart(ctx, {
             type: 'doughnut',
-            data: {
+             {
                 labels: Object.keys(estadosCount),
                 datasets: [{
-                    data: Object.values(estadosCount),
+                     Object.values(estadosCount),
                     backgroundColor: ['#FF9800', '#2196F3', '#4CAF50']
                 }]
             },
@@ -1403,11 +1403,11 @@
         if (chartClientes) chartClientes.destroy();
         chartClientes = new Chart(ctx, {
             type: 'bar',
-            data: {
+             {
                 labels: sortedClientes.map(c => c[0]),
                 datasets: [{
                     label: 'Trabajos por Cliente',
-                    data: sortedClientes.map(c => c[1]),
+                     sortedClientes.map(c => c[1]),
                     backgroundColor: '#28a745'
                 }]
             },
@@ -1483,10 +1483,10 @@
         if (invitadoChartEstados) invitadoChartEstados.destroy();
         invitadoChartEstados = new Chart(ctx, {
             type: 'doughnut',
-            data: {
+             {
                 labels: Object.keys(estadosCount),
                 datasets: [{
-                    data: Object.values(estadosCount),
+                     Object.values(estadosCount),
                     backgroundColor: ['#FF9800', '#2196F3', '#4CAF50']
                 }]
             },
@@ -1510,11 +1510,11 @@
         if (invitadoChartProgreso) invitadoChartProgreso.destroy();
         invitadoChartProgreso = new Chart(ctx, {
             type: 'bar',
-            data: {
+             {
                 labels: Object.keys(estadosCount),
                 datasets: [{
                     label: 'Repuestos por Estado',
-                    data: Object.values(estadosCount),
+                     Object.values(estadosCount),
                     backgroundColor: '#17a2b8'
                 }]
             },
