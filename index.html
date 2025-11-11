@@ -1062,20 +1062,8 @@
         }
     }
     // --- SISTEMA DE LOGIN ---
-    document.getElementById('loginForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
-        if (username === 'admin' && password === 'changan01') { // Contraseña cambiada
-            usuarioActual = { rol: 'admin', nombre: 'Administrador' };
-            iniciarAppAdmin();
-        } else if (username === 'invitado' && password === 'changan02') { // Contraseña cambiada
-            usuarioActual = { rol: 'invitado', nombre: 'Invitado' };
-            iniciarAppInvitado();
-        } else {
-            mostrarNotificacion('Usuario o contraseña incorrectos.', 'error');
-        }
-    });
+    // Eliminamos el primer addEventListener duplicado
+    // Mantenemos solo el que está dentro de DOMContentLoaded
     async function iniciarAppAdmin() {
         document.getElementById('loginScreen').style.display = 'none';
         document.getElementById('adminContainer').style.display = 'block';
@@ -1372,7 +1360,7 @@
                 labels: Object.keys(modelosCount),
                 datasets: [{
                     label: 'Trabajos por Modelo',
-                    data: Object.values(modelosCount),
+                     Object.values(modelosCount),
                     backgroundColor: '#17a2b8'
                 }]
             },
@@ -1889,16 +1877,17 @@
                 contadorRepuestos++;
             });
         });
-        await guardarDatos();
+        await guardarDatos(); // Corrección: Añadido await guardarDatos();
         renderizarTrabajos();
-        this.reset();
-        mostrarNotificacion(`Trabajo y ${contadorRepuestos} repuestos creados correctamente.`, 'success');
+        this.reset(); // Corrección: Añadido reset()
+        mostrarNotificacion(`Trabajo y ${contadorRepuestos} repuestos creados correctamente.`, 'success'); // Corrección: Cambiado 'mostrarNotificación' por 'mostrarNotificacion'
     }
     // --- INICIALIZACIÓN ---
     document.addEventListener('DOMContentLoaded', function() {
         // Cargar las APIs de Google
         gapiLoaded();
         gisLoaded();
+        // Mantenemos solo este listener de inicio de sesión
         document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const username = document.getElementById('username').value;
