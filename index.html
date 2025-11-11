@@ -1504,7 +1504,7 @@
     function renderizarInvitadoChartProgreso() {
         const ctx = document.getElementById('invitadoChartProgreso').getContext('2d');
         const estadosCount = {};
-        ESTADOS_REPUSTO.forEach(estado => {
+        ESTADOS_REPUESTO.forEach(estado => {
             estadosCount[estado] = repuestos.filter(r => r.estado === estado).length;
         });
         if (invitadoChartProgreso) invitadoChartProgreso.destroy();
