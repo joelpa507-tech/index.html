@@ -1,3 +1,6 @@
+Claro, aquí tienes el código HTML completo con las contraseñas modificadas como solicitaste: `changan01` para el administrador y `changan02` para el invitado.
+
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -618,7 +621,6 @@
         <button type="submit">Ingresar</button>
     </form>
 </div>
-
 <!-- APLICACIÓN PRINCIPAL DEL ADMINISTRADOR -->
 <div id="adminContainer" style="display: none;">
 <div class="container">
@@ -628,7 +630,6 @@
         <button class="tab-button" onclick="showTab('ficha')">2. Ficha de Trabajo</button>
         <button class="tab-button" onclick="showTab('dashboard')">3. Auditoría y KPIs</button>
     </div>
-
     <!-- Tab 1: Gestión de Trabajos -->
     <div id="trabajos" class="tab-content active">
         <h2>Crear Nuevo Trabajo (Individual)</h2>
@@ -657,7 +658,6 @@
             </div>
             <button type="submit">Guardar Trabajo Vacío</button>
         </form>
-
         <div class="bulk-import-section">
             <h2>Crear Trabajo con Repuestos Masivos</h2>
             <p>Completa los datos del trabajo y pega la lista de repuestos a continuación.</p>
@@ -696,14 +696,12 @@
                 <button type="submit">Crear Trabajo e Importar Repuestos</button>
             </form>
         </div>
-
         <h2>Listado de Trabajos Activos</h2>
         <table id="tablaTrabajos">
             <thead><tr><th>N° Cotización</th><th>Fecha</th><th>Cliente</th><th>Placa</th><th>Vehículo</th><th>Estado</th><th>Acciones</th></tr></thead>
             <tbody></tbody>
         </table>
     </div>
-
     <!-- Tab 2: Ficha de Trabajo Completa -->
     <div id="ficha" class="tab-content">
         <h2>Ficha Detallada del Trabajo</h2>
@@ -713,7 +711,6 @@
         </div>
         <div id="contenidoFicha"></div>
     </div>
-
     <!-- Tab 3: Auditoría y KPIs -->
     <div id="dashboard" class="tab-content">
         <h2>Auditoría y KPIs del Sistema</h2>
@@ -739,7 +736,6 @@
                 <tbody></tbody>
             </table>
         </div>
-        
         <!-- Sección de reportes por cliente -->
         <div class="report-section">
             <h3>Generar Reportes por Cliente</h3>
@@ -755,13 +751,11 @@
             </div>
         </div>
     </div>
-
     <button class="export-btn" onclick="exportarAExcel()">📊 Exportar Todo a Excel</button>
     <button onclick="cerrarSesion()" style="background-color: #dc3545; margin-left: 10px;">Cerrar Sesión</button>
 </div>
 </div>
 </div>
-
 <!-- APLICACIÓN PRINCIPAL DEL INVITADO -->
 <div id="invitadoContainer" style="display: none;">
 <div class="invitado-container">
@@ -774,7 +768,6 @@
         <button class="invitado-tab-button" onclick="showInvitadoTab('detalles')">Detalles de Trabajo</button>
         <button class="invitado-tab-button" onclick="showInvitadoTab('reportes')">Reportes</button>
     </div>
-
     <!-- Tab 1: Consulta de Trabajos -->
     <div id="consulta" class="invitado-tab-content active">
         <h2>Consulta de Trabajos Activos</h2>
@@ -801,7 +794,6 @@
             </table>
         </div>
     </div>
-
     <!-- Tab 2: Detalles de Trabajo -->
     <div id="detalles" class="invitado-tab-content">
         <h2>Detalles del Trabajo</h2>
@@ -811,7 +803,6 @@
         </div>
         <div id="contenidoTrabajoInvitado"></div>
     </div>
-
     <!-- Tab 3: Reportes -->
     <div id="reportes" class="invitado-tab-content">
         <h2>Reportes de Estado</h2>
@@ -840,7 +831,6 @@
                 <div class="dashboard-card"><canvas id="invitadoChartProgreso"></canvas></div>
             </div>
         </div>
-        
         <!-- Sección de reportes por cliente para invitados -->
         <div class="report-section">
             <h3>Generar Reportes por Cliente</h3>
@@ -858,33 +848,27 @@
     </div>
 </div>
 </div>
-
 <!-- Contenedor oculto para generar el PDF -->
 <div id="pdfContent"></div>
-
 <!-- Modal para ver imágenes (mejorado) -->
 <div id="imageModal" class="modal">
     <span class="close" onclick="cerrarModalImagen()">&times;</span>
     <img class="modal-content" id="modalImage">
     </div>
 </div>
-
 <!-- Notificación -->
 <div id="notification" class="notification"></div>
-
 <!-- Indicador de sincronización -->
 <div id="syncIndicator" class="sync-indicator">
     <div class="sync-spinner"></div>
     <span id="syncText">Sincronizando...</span>
 </div>
-
 <!-- Indicador de usuarios conectados -->
 <div id="connectedUsers" class="connected-users" style="display: none;">
     <span class="user-indicator user-online"></span>
     <span id="userCount">0 usuarios conectados</span>
 </div>
 </div>
-
 <script>
     // --- CONFIGURACIÓN Y VARIABLES GLOBALES ---
     const { jsPDF } = window.jspdf;
@@ -897,23 +881,19 @@
     let idRepuestoEnEdicion = null;
     let usuarioActual = null;
     let connectedUsers = [];
-    
     // Configuración de Google Sheets API
     const API_KEY = 'AIzaSyCNP34eVXC-5XMs3-zKJ71bO7856NTBPYc'; // API key proporcionada
     const SPREADSHEET_ID = '1udqJTS1E7Wl7j5q8h2FWPyElXEl2Aom59Hwns4oCGw0'; // ID de la hoja de cálculo
     const DISCOVERY_DOCS = ['https://sheets.googleapis.com/$discovery/rest?version=v4'];
     const SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
-    
     let tokenClient;
     let gapiInited = false;
     let gisInited = false;
     let lastSyncTime = 0;
     let syncInterval;
     let userActivityInterval;
-    
     // Modo de almacenamiento (local o google sheets)
     const USE_LOCAL_STORAGE = false; // Cambiado a false para usar Google Sheets
-    
     // --- INICIALIZACIÓN DE GOOGLE API ---
     function gapiLoaded() {
         if (!USE_LOCAL_STORAGE) {
@@ -923,10 +903,8 @@
             console.log('Modo local activado. Google API no se inicializará.');
         }
     }
-
     async function initializeGapiClient() {
         if (USE_LOCAL_STORAGE) return;
-        
         await gapi.client.init({
             apiKey: API_KEY,
             discoveryDocs: DISCOVERY_DOCS,
@@ -934,7 +912,6 @@
         gapiInited = true;
         maybeEnableButtons();
     }
-
     function gisLoaded() {
         if (USE_LOCAL_STORAGE) {
             gisInited = true;
@@ -949,18 +926,15 @@
             maybeEnableButtons();
         }
     }
-
     function maybeEnableButtons() {
         if (gapiInited && gisInited) {
             // Las API están listas para usar
             console.log('Google APIs inicializadas correctamente');
         }
     }
-
     // --- FUNCIONES DE GOOGLE SHEETS ---
     async function authenticateGoogle() {
         if (USE_LOCAL_STORAGE) return Promise.resolve();
-        
         return new Promise((resolve, reject) => {
             tokenClient.callback = async (resp) => {
                 if (resp.error !== undefined) {
@@ -976,15 +950,12 @@
             }
         });
     }
-
     async function saveDataToGoogleSheets() {
         if (USE_LOCAL_STORAGE) {
             return Promise.resolve();
         }
-        
         try {
             showSyncIndicator('Sincronizando con Google Sheets...', 'syncing');
-            
             // Preparar los datos para guardar
             const data = {
                 trabajos: trabajos,
@@ -993,10 +964,8 @@
                 lastModified: new Date().toISOString(),
                 connectedUsers: connectedUsers
             };
-            
             // Convertir los datos a formato de hoja de cálculo
             const jsonData = JSON.stringify(data);
-            
             // Actualizar la hoja de cálculo
             const response = await gapi.client.sheets.spreadsheets.values.update({
                 spreadsheetId: SPREADSHEET_ID,
@@ -1006,11 +975,9 @@
                     values: [[jsonData]]
                 }
             });
-            
             lastSyncTime = Date.now();
             showSyncIndicator('Datos sincronizados correctamente', 'success');
             setTimeout(hideSyncIndicator, 3000);
-            
             return response;
         } catch (error) {
             console.error('Error al guardar datos en Google Sheets:', error);
@@ -1019,35 +986,28 @@
             throw error;
         }
     }
-
     async function loadDataFromGoogleSheets() {
         if (USE_LOCAL_STORAGE) {
             return Promise.resolve(false);
         }
-        
         try {
             showSyncIndicator('Cargando datos desde Google Sheets...', 'syncing');
-            
             // Obtener los datos de la hoja de cálculo
             const response = await gapi.client.sheets.spreadsheets.values.get({
                 spreadsheetId: SPREADSHEET_ID,
                 range: 'Datos!A1'
             });
-            
             if (response.result.values && response.result.values.length > 0) {
                 const jsonData = response.result.values[0][0];
                 const data = JSON.parse(jsonData);
-                
                 // Actualizar los datos locales
                 if (data.trabajos) trabajos = data.trabajos;
                 if (data.repuestos) repuestos = data.repuestos;
                 if (data.historialEstados) historialEstados = data.historialEstados;
                 if (data.connectedUsers) connectedUsers = data.connectedUsers;
-                
                 lastSyncTime = Date.now();
                 showSyncIndicator('Datos cargados correctamente', 'success');
                 setTimeout(hideSyncIndicator, 3000);
-                
                 return true;
             } else {
                 console.log('No se encontraron datos en la hoja de cálculo');
@@ -1061,27 +1021,21 @@
             return false;
         }
     }
-
     function showSyncIndicator(text, status = 'syncing') {
         const indicator = document.getElementById('syncIndicator');
         const syncText = document.getElementById('syncText');
-        
         syncText.textContent = text;
         indicator.className = 'sync-indicator show ' + status;
     }
-
     function hideSyncIndicator() {
         const indicator = document.getElementById('syncIndicator');
         indicator.className = 'sync-indicator';
     }
-
     // --- FUNCIONES DE USUARIOS CONECTADOS ---
     function registerUserActivity() {
         if (!usuarioActual) return;
-        
         const userId = usuarioActual.nombre + '_' + Date.now();
         const userIndex = connectedUsers.findIndex(u => u.nombre === usuarioActual.nombre);
-        
         if (userIndex === -1) {
             connectedUsers.push({
                 id: userId,
@@ -1092,22 +1046,17 @@
         } else {
             connectedUsers[userIndex].lastActivity = new Date().toISOString();
         }
-        
         updateConnectedUsersDisplay();
     }
-
     function updateConnectedUsersDisplay() {
         const now = new Date();
         const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
-        
         // Filtrar usuarios activos (con actividad en los últimos 5 minutos)
         const activeUsers = connectedUsers.filter(u => 
             new Date(u.lastActivity) > fiveMinutesAgo
         );
-        
         const userCountElement = document.getElementById('userCount');
         const connectedUsersElement = document.getElementById('connectedUsers');
-        
         if (activeUsers.length > 0) {
             userCountElement.textContent = `${activeUsers.length} usuario(s) conectado(s)`;
             connectedUsersElement.style.display = 'block';
@@ -1115,44 +1064,36 @@
             connectedUsersElement.style.display = 'none';
         }
     }
-
     // --- SISTEMA DE LOGIN ---
     document.getElementById('loginForm').addEventListener('submit', function(e) {
         e.preventDefault();
         const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
-        
-        if (username === 'admin' && password === 'admin01') {
+        if (username === 'admin' && password === 'changan01') { // Contraseña cambiada
             usuarioActual = { rol: 'admin', nombre: 'Administrador' };
             iniciarAppAdmin();
-        } else if (username === 'invitado' && password === 'invitado01') {
+        } else if (username === 'invitado' && password === 'changan02') { // Contraseña cambiada
             usuarioActual = { rol: 'invitado', nombre: 'Invitado' };
             iniciarAppInvitado();
         } else {
             mostrarNotificacion('Usuario o contraseña incorrectos.', 'error');
         }
     });
-
     async function iniciarAppAdmin() {
         document.getElementById('loginScreen').style.display = 'none';
         document.getElementById('adminContainer').style.display = 'block';
         document.querySelector('#adminContainer h1').textContent += ` - Sesión de ${usuarioActual.nombre}`;
-        
         // Cargar datos desde Google Sheets o localStorage
         if (!USE_LOCAL_STORAGE) {
             await loadDataFromGoogleSheets();
         }
-        
         // Cargar datos locales como respaldo
         cargarDatosLocales();
-        
         renderizarTrabajos();
         renderizarDashboard();
         actualizarSelectClientesReporte();
-        
         // Registrar actividad del usuario
         registerUserActivity();
-        
         // Iniciar sincronización automática cada 5 minutos solo si no estamos en modo local
         if (!USE_LOCAL_STORAGE) {
             syncInterval = setInterval(async () => {
@@ -1160,7 +1101,6 @@
                 renderizarTrabajos();
                 renderizarDashboard();
             }, 5 * 60 * 1000);
-            
             // Actualizar actividad del usuario cada minuto
             userActivityInterval = setInterval(() => {
                 registerUserActivity();
@@ -1168,28 +1108,22 @@
             }, 60 * 1000);
         }
     }
-
     async function iniciarAppInvitado() {
         document.getElementById('loginScreen').style.display = 'none';
         document.getElementById('invitadoContainer').style.display = 'block';
         document.querySelector('.invitado-container h1').textContent += ` - Sesión de ${usuarioActual.nombre}`;
-        
         // Cargar datos desde Google Sheets o localStorage
         if (!USE_LOCAL_STORAGE) {
             await loadDataFromGoogleSheets();
         }
-        
         // Cargar datos locales como respaldo
         cargarDatosLocales();
-        
         renderizarTrabajosInvitado();
         renderizarReportesInvitado();
         actualizarSelectTrabajosInvitado();
         actualizarSelectClientesReporteInvitado();
-        
         // Registrar actividad del usuario
         registerUserActivity();
-        
         // Iniciar sincronización automática cada 5 minutos solo si no estamos en modo local
         if (!USE_LOCAL_STORAGE) {
             syncInterval = setInterval(async () => {
@@ -1197,7 +1131,6 @@
                 renderizarTrabajosInvitado();
                 renderizarReportesInvitado();
             }, 5 * 60 * 1000);
-            
             // Actualizar actividad del usuario cada minuto
             userActivityInterval = setInterval(() => {
                 registerUserActivity();
@@ -1205,20 +1138,16 @@
             }, 60 * 1000);
         }
     }
-
     function cerrarSesion() {
         if (confirm('¿Está seguro de que desea cerrar sesión?')) {
             // Detener la sincronización automática
             if (syncInterval) clearInterval(syncInterval);
             if (userActivityInterval) clearInterval(userActivityInterval);
-            
             // Guardar datos locales antes de cerrar sesión
             guardarDatosLocales();
-            
             location.reload();
         }
     }
-
     // --- FUNCIONES AUXILIARES ---
     function formatearFecha(fechaISO) { 
         if (!fechaISO) return ''; 
@@ -1228,32 +1157,27 @@
         const anio = String(fecha.getFullYear()).slice(-2); 
         return `${dia}/${mes}/${anio}`; 
     }
-
     function formatearFechaHora(fechaISO) { 
         if (!fechaISO) return ''; 
         const fecha = new Date(fechaISO); 
         return fecha.toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' }); 
     }
-
     // --- FUNCIONES DE NOTIFICACIÓN ---
     function mostrarNotificacion(mensaje, tipo = 'success') {
         const notification = document.getElementById('notification');
         notification.textContent = mensaje;
         notification.className = `notification ${tipo}`;
         notification.classList.add('show');
-        
         setTimeout(() => {
             notification.classList.remove('show');
         }, 3000);
     }
-
     // --- FUNCIONES DE ALMACENAMIENTO LOCAL ---
     function cargarDatosLocales() {
         try {
             const trabajosData = localStorage.getItem('trabajos') ? JSON.parse(localStorage.getItem('trabajos')) : [];
             const repuestosData = localStorage.getItem('repuestos') ? JSON.parse(localStorage.getItem('repuestos')) : [];
             const historialData = localStorage.getItem('historialEstados') ? JSON.parse(localStorage.getItem('historialEstados')) : [];
-            
             // Solo usar datos locales si no hay datos en la nube
             if (trabajos.length === 0) trabajos = trabajosData;
             if (repuestos.length === 0) repuestos = repuestosData;
@@ -1263,18 +1187,15 @@
             mostrarNotificacion("No se pudieron cargar los datos. Verifica tu conexión.", 'error');
         }
     }
-
     function guardarDatosLocales() {
         localStorage.setItem('trabajos', JSON.stringify(trabajos));
         localStorage.setItem('repuestos', JSON.stringify(repuestos));
         localStorage.setItem('historialEstados', JSON.stringify(historialEstados));
     }
-
     // --- FUNCIONES DE SINCRONIZACIÓN ---
     async function guardarDatos() {
         // Guardar en localStorage como respaldo
         guardarDatosLocales();
-        
         // Intentar guardar en Google Sheets solo si no estamos en modo local
         if (!USE_LOCAL_STORAGE) {
             try {
@@ -1287,7 +1208,6 @@
             }
         }
     }
-
     // --- FUNCIONES DEL ADMINISTRADOR ---
     function showTab(tabName) {
         const tabContents = document.querySelectorAll('.tab-content');
@@ -1304,7 +1224,6 @@
             renderizarDashboard();
         }
     }
-
     // --- FUNCIONES DEL INVITADO ---
     function showInvitadoTab(tabName) {
         const tabContents = document.querySelectorAll('.invitado-tab-content');
@@ -1319,21 +1238,17 @@
             renderizarReportesInvitado();
         }
     }
-
     // --- FUNCIONES DE RENDERIZADO ---
     function renderizarTrabajos() {
         const tbody = document.querySelector('#tablaTrabajos tbody');
         tbody.innerHTML = '';
-        
         trabajos.forEach(trabajo => {
             const row = document.createElement('tr');
-            
             // Determinar clase de estado
             let estadoClass = '';
             if (trabajo.estado === 'Completado') estadoClass = 'invitado-status-completed';
             else if (trabajo.estado === 'En Proceso') estadoClass = 'invitado-status-pending';
             else estadoClass = 'invitado-status-delayed';
-            
             row.innerHTML = `
                 <td>${trabajo.numCotizacion}</td>
                 <td>${formatearFecha(trabajo.fechaIngreso)}</td>
@@ -1350,23 +1265,19 @@
             tbody.appendChild(row);
         });
     }
-
     function renderizarTrabajosInvitado() {
         const tbody = document.querySelector('#tablaTrabajosInvitado tbody');
         tbody.innerHTML = '';
-        
         trabajos.forEach(trabajo => {
             const repuestosTrabajo = repuestos.filter(r => r.idTrabajo === trabajo.id);
             const totalRepuestos = repuestosTrabajo.length;
             const repuestosRecibidos = repuestosTrabajo.filter(r => r.cantidadRecibida > 0).length;
             const progreso = totalRepuestos > 0 ? Math.round((repuestosRecibidos / totalRepuestos) * 100) : 0;
-            
             // Determinar clase de estado
             let estadoClass = '';
             if (trabajo.estado === 'Completado') estadoClass = 'invitado-status-completed';
             else if (trabajo.estado === 'En Proceso') estadoClass = 'invitado-status-pending';
             else estadoClass = 'invitado-status-delayed';
-            
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td>${trabajo.numCotizacion}</td>
@@ -1388,16 +1299,13 @@
             tbody.appendChild(row);
         });
     }
-
     function renderizarDashboard() {
         // Calcular métricas
         const totalTrabajos = trabajos.length;
         const trabajosCompletados = trabajos.filter(t => t.estado === 'Completado').length;
         const efectividad = totalTrabajos > 0 ? Math.round((trabajosCompletados / totalTrabajos) * 100) : 0;
-        
         const totalRepuestos = repuestos.length;
         const repuestosRecibidos = repuestos.filter(r => r.cantidadRecibida > 0).length;
-        
         // Calcular tiempo promedio de espera
         let tiempoPromedio = 0;
         if (trabajos.length > 0) {
@@ -1411,22 +1319,18 @@
                 tiempoPromedio = Math.round(totalDias / trabajosConFecha.length);
             }
         }
-        
         // Actualizar métricas en el DOM
         document.getElementById('metricEfectividad').textContent = `${efectividad}%`;
         document.getElementById('metricTrabajos').textContent = totalTrabajos;
         document.getElementById('metricRepuestos').textContent = totalRepuestos;
         document.getElementById('metricTiempoPromedio').textContent = tiempoPromedio;
-        
         // Renderizar gráficos
         renderizarChartEstados();
         renderizarChartModelos();
         renderizarChartClientes();
-        
         // Renderizar historial
         renderizarHistorial();
     }
-
     function renderizarChartEstados() {
         const ctx = document.getElementById('chartEstados').getContext('2d');
         const estadosCount = {
@@ -1434,7 +1338,6 @@
             'En Proceso': trabajos.filter(t => t.estado === 'En Proceso').length,
             'Completado': trabajos.filter(t => t.estado === 'Completado').length
         };
-        
         if (chartEstados) chartEstados.destroy();
         chartEstados = new Chart(ctx, {
             type: 'doughnut',
@@ -1456,18 +1359,15 @@
             }
         });
     }
-
     function renderizarChartModelos() {
         const ctx = document.getElementById('chartModelos').getContext('2d');
         const modelosCount = {};
-        
         trabajos.forEach(trabajo => {
             if (!modelosCount[trabajo.modeloVehiculo]) {
                 modelosCount[trabajo.modeloVehiculo] = 0;
             }
             modelosCount[trabajo.modeloVehiculo]++;
         });
-        
         if (chartModelos) chartModelos.destroy();
         chartModelos = new Chart(ctx, {
             type: 'bar',
@@ -1490,23 +1390,19 @@
             }
         });
     }
-
     function renderizarChartClientes() {
         const ctx = document.getElementById('chartClientes').getContext('2d');
         const clientesCount = {};
-        
         trabajos.forEach(trabajo => {
             if (!clientesCount[trabajo.nombreCliente]) {
                 clientesCount[trabajo.nombreCliente] = 0;
             }
             clientesCount[trabajo.nombreCliente]++;
         });
-        
         // Ordenar clientes por cantidad de trabajos y tomar los 10 principales
         const sortedClientes = Object.entries(clientesCount)
             .sort((a, b) => b[1] - a[1])
             .slice(0, 10);
-        
         if (chartClientes) chartClientes.destroy();
         chartClientes = new Chart(ctx, {
             type: 'bar',
@@ -1529,19 +1425,15 @@
             }
         });
     }
-
     function renderizarHistorial() {
         const tbody = document.querySelector('#tablaHistorial tbody');
         tbody.innerHTML = '';
-        
         const filtro = document.getElementById('filtroHistorial').value.toLowerCase();
         const historialFiltrado = historialEstados.filter(h => 
             h.codigoRepuesto.toLowerCase().includes(filtro)
         );
-        
         // Ordenar por fecha (más reciente primero)
         historialFiltrado.sort((a, b) => new Date(b.fechaCambio) - new Date(a.fechaCambio));
-        
         historialFiltrado.forEach(historial => {
             const row = document.createElement('tr');
             row.innerHTML = `
@@ -1556,43 +1448,34 @@
             tbody.appendChild(row);
         });
     }
-
     // --- FUNCIONES DE EXPORTACIÓN ---
     function exportarAExcel() {
         const workbook = XLSX.utils.book_new();
-        
         // Hoja de trabajos
         const trabajosWS = XLSX.utils.json_to_sheet(trabajos);
         XLSX.utils.book_append_sheet(workbook, trabajosWS, "Trabajos");
-        
         // Hoja de repuestos
         const repuestosWS = XLSX.utils.json_to_sheet(repuestos);
         XLSX.utils.book_append_sheet(workbook, repuestosWS, "Repuestos");
-        
         // Hoja de historial
         const historialWS = XLSX.utils.json_to_sheet(historialEstados);
         XLSX.utils.book_append_sheet(workbook, historialWS, "Historial");
-        
         XLSX.writeFile(workbook, "Sistema_Repuestos_Export.xlsx");
         mostrarNotificacion('Exportación a Excel completada.', 'success');
     }
-
     // --- FUNCIONES DE REPORTES ---
     function renderizarReportesInvitado() {
         const totalTrabajos = trabajos.length;
         const totalRepuestos = repuestos.length;
         const repuestosRecibidos = repuestos.filter(r => r.cantidadRecibida > 0).length;
         const trabajosCompletados = trabajos.filter(t => t.estado === 'Completado').length;
-        
         document.getElementById('invitadoTotalTrabajos').textContent = totalTrabajos;
         document.getElementById('invitadoRepuestosPendientes').textContent = totalRepuestos - repuestosRecibidos;
         document.getElementById('invitadoRepuestosRecibidos').textContent = repuestosRecibidos;
         document.getElementById('invitadoTrabajosCompletados').textContent = trabajosCompletados;
-        
         renderizarInvitadoChartEstados();
         renderizarInvitadoChartProgreso();
     }
-
     function renderizarInvitadoChartEstados() {
         const ctx = document.getElementById('invitadoChartEstados').getContext('2d');
         const estadosCount = {
@@ -1600,7 +1483,6 @@
             'En Proceso': trabajos.filter(t => t.estado === 'En Proceso').length,
             'Completados': trabajos.filter(t => t.estado === 'Completado').length
         };
-        
         if (invitadoChartEstados) invitadoChartEstados.destroy();
         invitadoChartEstados = new Chart(ctx, {
             type: 'doughnut',
@@ -1622,15 +1504,12 @@
             }
         });
     }
-
     function renderizarInvitadoChartProgreso() {
         const ctx = document.getElementById('invitadoChartProgreso').getContext('2d');
         const estadosCount = {};
-        
         ESTADOS_REPUESTO.forEach(estado => {
             estadosCount[estado] = repuestos.filter(r => r.estado === estado).length;
         });
-        
         if (invitadoChartProgreso) invitadoChartProgreso.destroy();
         invitadoChartProgreso = new Chart(ctx, {
             type: 'bar',
@@ -1653,19 +1532,16 @@
             }
         });
     }
-
     // --- FUNCIONES DE ACTUALIZACIÓN DE SELECTS ---
     function actualizarSelectTrabajoFicha() {
         const select = document.getElementById('selectTrabajoFicha');
         select.innerHTML = '<option value="">-- Seleccione un trabajo --</option>';
-        
         trabajos.forEach(trabajo => {
             const option = document.createElement('option');
             option.value = trabajo.id;
             option.textContent = `${trabajo.numCotizacion} - ${trabajo.nombreCliente}`;
             select.appendChild(option);
         });
-        
         select.onchange = function() {
             if (this.value) {
                 renderizarFichaTrabajo(this.value);
@@ -1674,18 +1550,15 @@
             }
         };
     }
-
     function actualizarSelectTrabajosInvitado() {
         const select = document.getElementById('selectTrabajoInvitado');
         select.innerHTML = '<option value="">-- Seleccione un trabajo --</option>';
-        
         trabajos.forEach(trabajo => {
             const option = document.createElement('option');
             option.value = trabajo.id;
             option.textContent = `${trabajo.numCotizacion} - ${trabajo.nombreCliente}`;
             select.appendChild(option);
         });
-        
         select.onchange = function() {
             if (this.value) {
                 renderizarDetallesTrabajoInvitado(this.value);
@@ -1694,14 +1567,11 @@
             }
         };
     }
-
     function actualizarSelectClientesReporte() {
         const select = document.getElementById('selectClienteReporte');
         select.innerHTML = '<option value="">-- Seleccione un cliente --</option>';
-        
         // Obtener lista única de clientes
         const clientesUnicos = [...new Set(trabajos.map(t => t.nombreCliente))];
-        
         clientesUnicos.forEach(cliente => {
             const option = document.createElement('option');
             option.value = cliente;
@@ -1709,14 +1579,11 @@
             select.appendChild(option);
         });
     }
-
     function actualizarSelectClientesReporteInvitado() {
         const select = document.getElementById('selectClienteReporteInvitado');
         select.innerHTML = '<option value="">-- Seleccione un cliente --</option>';
-        
         // Obtener lista única de clientes
         const clientesUnicos = [...new Set(trabajos.map(t => t.nombreCliente))];
-        
         clientesUnicos.forEach(cliente => {
             const option = document.createElement('option');
             option.value = cliente;
@@ -1724,14 +1591,11 @@
             select.appendChild(option);
         });
     }
-
     // --- FUNCIONES DE DETALLES ---
     function renderizarFichaTrabajo(trabajoId) {
         const trabajo = trabajos.find(t => t.id === trabajoId);
         if (!trabajo) return;
-        
         const repuestosTrabajo = repuestos.filter(r => r.idTrabajo === trabajoId);
-        
         let html = `
             <div class="ficha-header">
                 ${trabajo.imagenVehiculo ? `<img src="${trabajo.imagenVehiculo}" alt="Imagen del vehículo">` : ''}
@@ -1743,7 +1607,6 @@
                     <p><strong>Estado:</strong> ${trabajo.estado}</p>
                 </div>
             </div>
-            
             <div class="ficha-report-section">
                 <h3>Lista de Repuestos</h3>
                 <table>
@@ -1760,7 +1623,6 @@
                     </thead>
                     <tbody>
         `;
-        
         repuestosTrabajo.forEach(repuesto => {
             html += `
                 <tr>
@@ -1777,16 +1639,13 @@
                 </tr>
             `;
         });
-        
         html += `
                     </tbody>
                 </table>
-                
                 <div style="margin-top: 20px;">
                     <button onclick="agregarRepuesto('${trabajoId}')">Agregar Repuesto</button>
                 </div>
             </div>
-            
             <div class="ficha-report-section">
                 <h3>Historial de Cambios</h3>
                 <table>
@@ -1801,15 +1660,12 @@
                     </thead>
                     <tbody>
         `;
-        
         const historialTrabajo = historialEstados.filter(h => {
             const repuesto = repuestos.find(r => r.id === h.idRepuesto);
             return repuesto && repuesto.idTrabajo === trabajoId;
         });
-        
         // Ordenar por fecha (más reciente primero)
         historialTrabajo.sort((a, b) => new Date(b.fechaCambio) - new Date(a.fechaCambio));
-        
         historialTrabajo.forEach(historial => {
             html += `
                 <tr>
@@ -1822,25 +1678,20 @@
                 </tr>
             `;
         });
-        
         html += `
                     </tbody>
                 </table>
             </div>
         `;
-        
         document.getElementById('contenidoFicha').innerHTML = html;
     }
-
     function renderizarDetallesTrabajoInvitado(trabajoId) {
         const trabajo = trabajos.find(t => t.id === trabajoId);
         if (!trabajo) return;
-        
         const repuestosTrabajo = repuestos.filter(r => r.idTrabajo === trabajoId);
         const totalRepuestos = repuestosTrabajo.length;
         const repuestosRecibidos = repuestosTrabajo.filter(r => r.cantidadRecibida > 0).length;
         const progreso = totalRepuestos > 0 ? Math.round((repuestosRecibidos / totalRepuestos) * 100) : 0;
-        
         let html = `
             <div class="invitado-detail-card">
                 <div class="invitado-detail-header">
@@ -1863,7 +1714,6 @@
                 <div class="invitado-detail-repuestos">
                     <h4>Lista de Repuestos</h4>
         `;
-        
         repuestosTrabajo.forEach(repuesto => {
             let statusClass = 'pending';
             if (repuesto.estado === 'Facturado' || repuesto.cantidadRecibida >= repuesto.cantidadCotizada) {
@@ -1871,7 +1721,6 @@
             } else if (repuesto.estado === 'Pedido Especial' || repuesto.estado === 'En Revision por el CEDIS') {
                 statusClass = 'delayed';
             }
-            
             html += `
                 <div class="invitado-repuesto-item">
                     <div class="invitado-repuesto-info">
@@ -1886,39 +1735,32 @@
                 </div>
             `;
         });
-        
         html += `
                 </div>
             </div>
         `;
-        
         document.getElementById('contenidoTrabajoInvitado').innerHTML = html;
     }
-
     // --- FUNCIONES DE BÚSQUEDA ---
     function buscarTrabajosInvitado() {
         const filtro = document.getElementById('busquedaInvitado').value.toLowerCase();
         const tbody = document.querySelector('#tablaTrabajosInvitado tbody');
         tbody.innerHTML = '';
-        
         const trabajosFiltrados = trabajos.filter(trabajo => 
             trabajo.numCotizacion.toLowerCase().includes(filtro) ||
             trabajo.nombreCliente.toLowerCase().includes(filtro) ||
             trabajo.placa.toLowerCase().includes(filtro)
         );
-        
         trabajosFiltrados.forEach(trabajo => {
             const repuestosTrabajo = repuestos.filter(r => r.idTrabajo === trabajo.id);
             const totalRepuestos = repuestosTrabajo.length;
             const repuestosRecibidos = repuestosTrabajo.filter(r => r.cantidadRecibida > 0).length;
             const progreso = totalRepuestos > 0 ? Math.round((repuestosRecibidos / totalRepuestos) * 100) : 0;
-            
             // Determinar clase de estado
             let estadoClass = '';
             if (trabajo.estado === 'Completado') estadoClass = 'invitado-status-completed';
             else if (trabajo.estado === 'En Proceso') estadoClass = 'invitado-status-pending';
             else estadoClass = 'invitado-status-delayed';
-            
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td>${trabajo.numCotizacion}</td>
@@ -1940,45 +1782,35 @@
             tbody.appendChild(row);
         });
     }
-
     function limpiarBusquedaInvitado() {
         document.getElementById('busquedaInvitado').value = '';
         renderizarTrabajosInvitado();
     }
-
     // --- FUNCIONES DE EXPORTACIÓN ---
     function exportarAExcel() {
         const workbook = XLSX.utils.book_new();
-        
         // Hoja de trabajos
         const trabajosWS = XLSX.utils.json_to_sheet(trabajos);
         XLSX.utils.book_append_sheet(workbook, trabajosWS, "Trabajos");
-        
         // Hoja de repuestos
         const repuestosWS = XLSX.utils.json_to_sheet(repuestos);
         XLSX.utils.book_append_sheet(workbook, repuestosWS, "Repuestos");
-        
         // Hoja de historial
         const historialWS = XLSX.utils.json_to_sheet(historialEstados);
         XLSX.utils.book_append_sheet(workbook, historialWS, "Historial");
-        
         XLSX.writeFile(workbook, "Sistema_Repuestos_Export.xlsx");
         mostrarNotificacion('Exportación a Excel completada.', 'success');
     }
-
     // --- FUNCIONES DE MODAL ---
     function abrirModalImagen(url) {
         const modal = document.getElementById('imageModal');
         const modalImg = document.getElementById('modalImage');
-        
         modal.style.display = 'block';
         modalImg.src = url;
     }
-
     function cerrarModalImagen() {
         document.getElementById('imageModal').style.display = 'none';
     }
-
     // --- MANEJADORES DE FORMULARIOS CORREGIDOS ---
     async function handleFormTrabajoSubmit(e) {
         e.preventDefault();
@@ -1998,7 +1830,6 @@
         this.reset();
         mostrarNotificacion('Trabajo creado correctamente.', 'success');
     }
-
     async function handleFormTrabajoMasivoSubmit(e) {
         e.preventDefault();
         const nuevoTrabajo = {
@@ -2012,11 +1843,10 @@
             estado: 'Pendiente'
         };
         trabajos.push(nuevoTrabajo);
-        
         const textoRepuestos = document.getElementById('textoRepuestosMasivosTrabajo').value;
-        const lineas = textoRepuestos.split('\n');
+        const lineas = textoRepuestos.split('
+');
         let contadorRepuestos = 0;
-        
         lineas.forEach(linea => {
             const partes = linea.split('\t');
             if (partes.length >= 3) {
@@ -2062,37 +1892,34 @@
                 contadorRepuestos++;
             });
         });
-        
         await guardarDatos();
         renderizarTrabajos();
         this.reset();
         mostrarNotificación(`Trabajo y ${contadorRepuestos} repuestos creados correctamente.`, 'success');
     }
-
     // --- INICIALIZACIÓN ---
     document.addEventListener('DOMContentLoaded', function() {
         // Cargar las APIs de Google
         gapiLoaded();
         gisLoaded();
-        
         document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
-            if (username === 'admin' && password === 'admin01') {
+            if (username === 'admin' && password === 'changan01') { // Contraseña cambiada
                 usuarioActual = { rol: 'admin', nombre: 'Administrador' };
                 iniciarAppAdmin();
-            } else if (username === 'invitado' && password === 'invitado01') {
+            } else if (username === 'invitado' && password === 'changan02') { // Contraseña cambiada
                 usuarioActual = { rol: 'invitado', nombre: 'Invitado' };
                 iniciarAppInvitado();
             } else {
                 mostrarNotificacion('Usuario o contraseña incorrectos.', 'error');
             }
         });
-        
         document.getElementById('formTrabajo').addEventListener('submit', handleFormTrabajoSubmit);
         document.getElementById('formTrabajoMasivo').addEventListener('submit', handleFormTrabajoMasivoSubmit);
     });
     </script>
 </body>
 </html>
+```
